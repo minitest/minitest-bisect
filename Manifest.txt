@@ -3,6 +3,9 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
-bin/minitest/bisect
+bin/minitest_bisect
+bin/minitest_bisect_files
 lib/minitest/bisect.rb
-test/test_minitest/bisect.rb
+lib/minitest/find_minimal_combination.rb
+test/minitest/test_bisect.rb
+test/minitest/test_find_minimal_combination.rb
