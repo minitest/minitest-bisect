@@ -1,0 +1,13 @@
+#!/usr/bin/ruby -w
+
+require "minitest/bisect"
+
+def build_cmd cmd, culprits, bad
+  return false if bad and culprits.empty?
+  cmd += ["-n", "'/#{Regexp.union culprits + [bad]}/'"] if bad
+
+  # Shellwords.shelljoin(cmd)
+  cmd.join " "
+end
+
+run ARGV.dup

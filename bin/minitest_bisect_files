@@ -1,0 +1,14 @@
+#!/usr/bin/ruby -w
+
+require "minitest/bisect"
+
+def build_cmd cmd, culprits, bad
+  return false if bad and culprits.empty?
+
+  tests = (culprits + [bad]).map {|f| %(require "./#{f}")}.join " ; "
+  cmd   = %(ruby -I"lib:test" -e '#{tests}' -- -v)
+
+  cmd
+end
+
+run ARGV.dup
