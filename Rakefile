@@ -26,4 +26,14 @@ Hoe.spec "minitest-bisect" do
   license "MIT"
 end
 
+require "rake/testtask"
+
+Rake::TestTask.new(:badtest) do |t|
+  t.test_files = Dir["badtest/test*.rb"]
+end
+
+task :repro do
+  ruby "-Ilib ./bin/minitest_bisect_files badtest/test_bad1.rb badtest/test_bad2.rb badtest/test_bad3.rb badtest/test_bad4.rb --seed=25111"
+end
+
 # vim: syntax=ruby
