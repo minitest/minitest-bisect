@@ -1,5 +1,7 @@
 require "minitest/autorun"
 
+$hosed ||= false
+
 class TestBad4 < Minitest::Test
   def test_bad4_1
     assert true
