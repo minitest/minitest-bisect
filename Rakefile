@@ -5,6 +5,7 @@ require "hoe"
 
 Hoe.plugin :isolate
 Hoe.plugin :seattlerb
+Hoe.plugin :rdoc
 
 Hoe.spec "minitest-bisect" do
   developer "Ryan Davis", "ryand-ruby@zenspider.com"
