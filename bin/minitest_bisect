@@ -5,9 +5,10 @@ require "minitest/bisect"
 def build_cmd cmd, culprits, bad
   return false if bad and culprits.empty?
   cmd += ["-n", "'/#{Regexp.union culprits + [bad]}/'"] if bad
+  cmd << "-v" unless cmd.include? "-v"
 
-  # Shellwords.shelljoin(cmd)
-  cmd.join " "
+  # cheap but much more readable version of shellwords' shelljoin
+  cmd.map { |s| s =~ / / ? "'#{s}'" : s }.join " "
 end
 
 run ARGV.dup
