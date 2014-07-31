@@ -44,7 +44,10 @@ end
 def done cmd, culprits, bad
   puts "No more culprits"
   puts
-  puts build_cmd(cmd, culprits, bad)
+  cmd = build_cmd(cmd, culprits, bad)
+  puts cmd
+  puts
+  system cmd
 end
 
 def run cmd
@@ -61,8 +64,6 @@ def run cmd
   puts
 
   bisect cmd, culprits, bad
-
-  system cmd
 end
 
 class Array
