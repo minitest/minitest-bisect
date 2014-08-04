@@ -5,7 +5,11 @@ rdoc :: http://docs.seattlerb.org/minitest-bisect
 
 == DESCRIPTION:
 
-FIX (describe your package)
+Testing is good, and good testing is better.  Messy tests are bad, and we're
+here to help.  This chunk of code will assist you with bugs which arise from
+tests written which depend on the order in which they are executed.  Testing
+suites can get large and cumbersome very quickly.  To make sure your tests
+don't suffer from order-dependence, give it a once over with this!
 
 == FEATURES/PROBLEMS:
 
