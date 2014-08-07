@@ -5,19 +5,120 @@ rdoc :: http://docs.seattlerb.org/minitest-bisect
 
 == DESCRIPTION:
 
-FIX (describe your package)
+Hunting down random test failures can be very very difficult,
+sometimes impossible, but minitest-bisect makes it easy.
+
+minitest-bisect helps you isolate and debug random test failures.
+
+If your tests only fail randomly, you can reproduce the error
+consistently by using `--seed <num>`, but what then? How do you figure
+out which combination of tests out of hundreds are responsible for the
+failure? You know which test is failing, but what others are causing
+it to fail or were helping it succeed in a different order? That's
+what minitest-bisect does best.
 
 == FEATURES/PROBLEMS:
 
-* FIX (list of features or problems)
+* minitest_bisect_files runs your tests on a per-file basis to minimize the number of tests you need to sift through.
+* minitest_bisect runs the minimized files and figures out your exact failure reproduction.
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+Let's say you have a bunch of test files and they fail sometimes, but
+not consistently. You get a run that fails, so you record the
+randomization seed that minitest displays at the top of every run.
+
+=== Original Failure:
+
+Here's an example run that fails randomly:
+
+  $ rake
+  ruby -I.:lib -e 'require "badtest/test_bad1.rb";require "badtest/test_bad2.rb";require "badtest/test_bad3.rb";require "badtest/test_bad4.rb"' -- --seed 3911
+
+  Run options: --seed 3911
+
+  # Running:
+
+  ........F.......
+
+  Finished in 0.002109s, 7586.5339 runs/s, 7112.3755 assertions/s.
+
+    1) Failure:
+  TestBad4#test_bad4_4 [/Users/ryan/Work/p4/zss/src/minitest-bisect/dev/badtest/test_bad4.rb:19]:
+  Epic Fail!
+
+  16 runs, 15 assertions, 1 failures, 0 errors, 0 skips
+  ruby -I.:lib bin/minitest_bisect_files --seed 3911 badtest/test*.rb
+
+=== Minimization:
+
+The next thing to do is to reduce the number of tests you need to sift
+through by minimizing the number of files you need to run by running
+`minitest_bisect_files` with the seed and the files to test:
+
+  $ minitest_bisect_files --seed 3911 badtest/test*.rb"
+
+  reproducing...
+  [... test output ...]
+  16 runs, 15 assertions, 1 failures, 0 errors, 0 skips
+  reproduced
+  [... test output ...]
+  8 runs, 7 assertions, 0 failures, 0 errors, 0 skips
+  [... test output ...]
+  8 runs, 7 assertions, 0 failures, 0 errors, 0 skips
+  [... test output ...]
+  8 runs, 7 assertions, 0 failures, 0 errors, 0 skips
+  [... test output ...]
+  8 runs, 7 assertions, 1 failures, 0 errors, 0 skips
+
+  Final found in 4 steps:
+
+  ruby  -e 'require "./badtest/test_bad1.rb" ; require "./badtest/test_bad4.rb"' -- --seed 3911
+  ruby -I.:lib bin/minitest_bisect ruby -I.:lib -e 'require "badtest/test_bad1.rb";require "badtest/test_bad4.rb"' -- --seed 3911
+
+Voila! This reduced it from all your test files down to just two.
+
+=== Isolation:
+
+Next you need to figure out what specific tests are causing the error by running minitest_bisect with the command given at the end of the previous run:
+
+  $ minitest_bisect ruby -I.:lib bin/minitest_bisect ruby -I.:lib -e 'require "badtest/test_bad1.rb";require "badtest/test_bad4.rb"' -- --seed 3911
+
+  Reproducing failure...
+  OK... reproduced the failure
+  The bad test is: TestBad4#test_bad4_4
+
+  # of culprits: 7
+  # of culprits: 3
+  # of culprits: 2
+  No more culprits
+
+  ruby -I.:lib -e 'require "badtest/test_bad1.rb";require "badtest/test_bad4.rb"' -- --seed 3911 -v -n '/(?-mix:TestBad1\#test_bad1_1|TestBad4\#test_bad4_4)/'
+
+  Run options: --seed 3911 -v -n "/(?-mix:TestBad1\\#test_bad1_1|TestBad4\\#test_bad4_4)/"
+
+  # Running:
+
+  TestBad1#test_bad1_1 = 0.00 s = .
+  TestBad4#test_bad4_4 = 0.00 s = F
+
+  Finished in 0.001526s, 1310.6160 runs/s, 655.3080 assertions/s.
+
+    1) Failure:
+  TestBad4#test_bad4_4 [/Users/ryan/Work/p4/zss/src/minitest-bisect/dev/badtest/test_bad4.rb:19]:
+  Epic Fail!
+
+  2 runs, 1 assertions, 1 failures, 0 errors, 0 skips
+
+And that's it! You now have a minimal reproduction of your random test failure!
+
+It is now up to you to look at the source of both of those tests to
+determine what side-effects (or lack thereof) are causing your test
+failure when run in this specific order.
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* minitest 5
 
 == INSTALL:
 
