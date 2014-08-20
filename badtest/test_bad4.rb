@@ -1,21 +1,4 @@
 require "minitest/autorun"
+require_relative "helper"
 
-$hosed ||= false
-
-class TestBad4 < Minitest::Test
-  def test_bad4_1
-    assert true
-  end
-
-  def test_bad4_2
-    assert true
-  end
-
-  def test_bad4_3
-    assert true
-  end
-
-  def test_bad4_4
-    flunk if $hosed
-  end
-end
+TestBad4 = create_test 4, 100, 4 => true

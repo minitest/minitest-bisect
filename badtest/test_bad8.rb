@@ -1,4 +1,4 @@
 require "minitest/autorun"
 require_relative "helper"
 
-TestBad3 = create_test 3, 100
+TestBad8 = create_test 8, 100
