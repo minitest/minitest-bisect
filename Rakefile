@@ -35,7 +35,7 @@ def req glob
 end
 
 task :repro do
-  ruby = "#{Gem.ruby} -I.:lib"
+  ruby = "ruby -I.:lib"
 
   banner "Original run that causes the test order dependency bug"
   run "#{ruby} -e '#{req "test*"}' -- --seed 3911"
