@@ -8,12 +8,13 @@ class Minitest::BisectFiles
     new.run files
   end
 
-  def build_cmd cmd, culprits, bad, rb_flags, mt_flags
+  def build_cmd cmd, culprits, bad, rb, mt
     return false if bad and culprits.empty?
 
-    tests = (culprits + [bad]).flatten.compact.map {|f| %(require "./#{f}")}.join " ; "
-
-    cmd   = %(ruby #{rb_flags.shelljoin} -e '#{tests}' -- #{mt_flags.shelljoin} &> /dev/null)
+    tests = (culprits + [bad]).flatten.compact.map {|f| %(require "./#{f}")}
+    tests = tests.join " ; "
+    shh   = "&> /dev/null"
+    cmd   = %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin} #{shh})
 
     cmd
   end
@@ -25,12 +26,7 @@ class Minitest::BisectFiles
     cmd = build_cmd(nil, files, nil, rb_flags, mt_flags)
 
     puts "reproducing..."
-
-    if system cmd then
-      puts "passed??"
-      exit 1
-    end
-
+    abort "Reproduction run passed? Aborting." if system cmd
     puts "reproduced"
 
     count = 0
@@ -38,7 +34,7 @@ class Minitest::BisectFiles
     found = files.find_minimal_combination do |test|
       count += 1
 
-      puts "# of culprits: #{test.flatten.compact.size}"
+      puts "# of culprits: #{test.size}"
 
       not system build_cmd(nil, test, nil, rb_flags, mt_flags)
     end
