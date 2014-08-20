@@ -35,6 +35,11 @@ def req glob
 end
 
 task :repro do
+  unless ENV.has_key? "SLEEP" then
+    warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
+    warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
+  end
+
   ruby = "ruby -I.:lib"
 
   banner "Original run that causes the test order dependency bug"
