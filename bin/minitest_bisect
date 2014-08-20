@@ -2,15 +2,4 @@
 
 require "minitest/bisect"
 
-def build_cmd cmd, culprits, bad
-  return false if bad and culprits.empty?
-
-  re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
-  cmd += ["-n", "'/^#{re}$/'"] if bad
-  cmd << "-v" unless cmd.include? "-v"
-
-  # cheap but much more readable version of shellwords' shelljoin
-  cmd.map { |s| s =~ / / ? "'#{s}'" : s }.join " "
-end
-
-run ARGV.dup
+Minitest::Bisect.run ARGV

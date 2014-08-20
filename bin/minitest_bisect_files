@@ -2,4 +2,4 @@
 
 require "minitest/bisect_files"
 
-Minitest::BisectFiles.run
+Minitest::BisectFiles.run ARGV

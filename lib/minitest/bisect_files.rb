@@ -3,8 +3,8 @@ require "shellwords"
 
 module Minitest
   class BisectFiles
-    def self.run
-      new.run
+    def self.run files
+      new.run files
     end
 
     def build_cmd cmd, culprits, bad, rb_flags, mt_flags
@@ -17,8 +17,8 @@ module Minitest
       cmd
     end
 
-    def run
-      files, flags = ARGV.partition { |arg| File.file? arg }
+    def run files
+      files, flags = files.partition { |arg| File.file? arg }
       rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
 
       cmd = build_cmd(nil, files, nil, rb_flags, mt_flags)

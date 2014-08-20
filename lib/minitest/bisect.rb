@@ -1,68 +1,81 @@
-require "minitest/find_minimal_combination"
-
 module Minitest; end
 
 class Minitest::Bisect
   VERSION = "1.0.0"
-end
 
-def bisect cmd, culprits, bad
-  puts "# of culprits: #{culprits.size}"
-  a, b = culprits.halves
-  if repro cmd, a, bad then
-    if a.size > 1 then
-      bisect cmd, a, bad
-    else
-      done cmd, a, bad
-    end
-  elsif repro cmd, b, bad then
-    if b.size > 1 then
-      bisect cmd, b, bad
-    else
-      done cmd, b, bad
-    end
-  else
-    raise "logic bug?"
+  def self.run cmd
+    new.run cmd
   end
-end
 
-def extract_culprits s
-  a = s.scan(/^(\w+\#\w+) = \d+\.\d+ s = (.)/)
-  i = a.index { |(_,r)| r =~ /[EF]/ }
-  a.map!(&:first)
+  def build_cmd cmd, culprits, bad
+    return false if bad and culprits.empty?
 
-  return a[0...i], a[i]
-end
+    re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
+    cmd += ["-n", "'/^#{re}$/'"] if bad
+    cmd << "-v" unless cmd.include? "-v"
 
-def repro cmd, culprits = [], bad = nil
-  cmd = build_cmd cmd, culprits, bad
-  s = `#{cmd}`
-  not $?.success? and s
-end
+    # cheap but much more readable version of shellwords' shelljoin
+    cmd.map { |s| s =~ / / ? "'#{s}'" : s }.join " "
+  end
 
-def done cmd, culprits, bad
-  puts "No more culprits"
-  puts
-  cmd = build_cmd(cmd, culprits, bad)
-  puts cmd
-  puts
-  system cmd
-end
+  def bisect cmd, culprits, bad
+    puts "# of culprits: #{culprits.size}"
+    a, b = culprits.halves
+    if repro cmd, a, bad then
+      if a.size > 1 then
+        bisect cmd, a, bad
+      else
+        done cmd, a, bad
+      end
+    elsif repro cmd, b, bad then
+      if b.size > 1 then
+        bisect cmd, b, bad
+      else
+        done cmd, b, bad
+      end
+    else
+      raise "logic bug?"
+    end
+  end
 
-def run cmd
-  puts "Reproducing failure..."
+  def extract_culprits s
+    a = s.scan(/^(\w+\#\w+) = \d+\.\d+ s = (.)/)
+    i = a.index { |(_,r)| r =~ /[EF]/ }
+    a.map!(&:first)
 
-  s = repro cmd
+    return a[0...i], a[i]
+  end
 
-  abort "Could not reproduce error. Aborting" unless s
+  def repro cmd, culprits = [], bad = nil
+    cmd = build_cmd cmd, culprits, bad
+    s = `#{cmd}`
+    not $?.success? and s
+  end
 
-  culprits, bad = extract_culprits s
+  def done cmd, culprits, bad
+    puts "No more culprits"
+    puts
+    cmd = build_cmd(cmd, culprits, bad)
+    puts cmd
+    puts
+    system cmd
+  end
 
-  puts "OK... reproduced the failure"
-  puts "The bad test is: #{bad}"
-  puts
+  def run cmd
+    puts "Reproducing failure..."
 
-  bisect cmd, culprits, bad
+    s = repro cmd
+
+    abort "Could not reproduce error. Aborting" unless s
+
+    culprits, bad = extract_culprits s
+
+    puts "OK... reproduced the failure"
+    puts "The bad test is: #{bad}"
+    puts
+
+    bisect cmd, culprits, bad
+  end
 end
 
 class Array
