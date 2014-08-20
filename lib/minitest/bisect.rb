@@ -36,7 +36,6 @@ end
 
 def repro cmd, culprits = [], bad = nil
   cmd = build_cmd cmd, culprits, bad
-  puts "cmd = `#{cmd}`"
   s = `#{cmd}`
   not $?.success? and s
 end
