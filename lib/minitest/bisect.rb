@@ -22,19 +22,19 @@ class Minitest::Bisect
     puts "# of culprits: #{culprits.size}"
     a, b = culprits.halves
     if repro cmd, a, bad then
-      if a.size > 1 then
-        bisect cmd, a, bad
-      else
-        done cmd, a, bad
-      end
+      try cmd, a, bad
     elsif repro cmd, b, bad then
-      if b.size > 1 then
-        bisect cmd, b, bad
-      else
-        done cmd, b, bad
-      end
+      try cmd, b, bad
     else
       raise "logic bug?"
+    end
+  end
+
+  def try cmd, ary, bad
+    if ary.size > 1 then
+      bisect cmd, ary, bad
+    else
+      done cmd, ary, bad
     end
   end
 
