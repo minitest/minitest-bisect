@@ -1,5 +1,7 @@
 #!/usr/bin/ruby -w
 
+module Minitest; end
+
 class ComboFinder
   ##
   # Find the minimal combination of a collection of items that satisfy +test+.

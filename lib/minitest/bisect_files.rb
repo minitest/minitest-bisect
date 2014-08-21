@@ -1,8 +1,6 @@
 require "minitest/find_minimal_combination"
 require "shellwords"
 
-module Minitest; end
-
 class Minitest::BisectFiles
   def self.run files
     new.run files

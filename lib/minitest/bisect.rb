@@ -1,4 +1,4 @@
-module Minitest; end
+require "minitest/find_minimal_combination"
 
 class Minitest::Bisect
   VERSION = "1.0.0"
@@ -8,19 +8,30 @@ class Minitest::Bisect
   end
 
   def run cmd
-    puts "Reproducing failure..."
-
+    puts "reproducing..."
     s = repro cmd
-
-    abort "Could not reproduce error. Aborting" unless s
+    abort "Reproduction run passed? Aborting." unless s
+    puts "reproduced"
 
     culprits, bad = extract_culprits s
 
-    puts "OK... reproduced the failure"
-    puts "The bad test is: #{bad}"
-    puts
+    count = 0
 
-    bisect cmd, culprits, bad
+    found = culprits.find_minimal_combination do |test|
+      count += 1
+
+      puts "# of culprits: #{test.size}"
+
+      repro cmd, test, bad
+    end
+
+    puts
+    puts "Final found in #{count} steps:"
+    puts
+    cmd = build_cmd cmd, found, bad
+    puts cmd
+    puts
+    system cmd
   end
 
   def build_cmd cmd, culprits, bad
@@ -32,26 +43,6 @@ class Minitest::Bisect
 
     # cheap but much more readable version of shellwords' shelljoin
     cmd.map { |s| s =~ / / ? "'#{s}'" : s }.join " "
-  end
-
-  def bisect cmd, culprits, bad
-    puts "# of culprits: #{culprits.size}"
-    a, b = culprits.halves
-    if repro cmd, a, bad then
-      try cmd, a, bad
-    elsif repro cmd, b, bad then
-      try cmd, b, bad
-    else
-      raise "logic bug?"
-    end
-  end
-
-  def try cmd, ary, bad
-    if ary.size > 1 then
-      bisect cmd, ary, bad
-    else
-      done cmd, ary, bad
-    end
   end
 
   def extract_culprits s
@@ -66,21 +57,5 @@ class Minitest::Bisect
     cmd = build_cmd cmd, culprits, bad
     s = `#{cmd}`
     not $?.success? and s
-  end
-
-  def done cmd, culprits, bad
-    puts "No more culprits"
-    puts
-    cmd = build_cmd(cmd, culprits, bad)
-    puts cmd
-    puts
-    system cmd
-  end
-end
-
-class Array
-  def halves
-    n = self.size / 2
-    return self[0...n], self[n..-1]
   end
 end
