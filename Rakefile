@@ -31,7 +31,7 @@ def run cmd
 end
 
 def req glob
-  Dir["badtest/#{glob}.rb"].map { |s| "require #{s.inspect}" }.join ";"
+  Dir["example/#{glob}.rb"].map { |s| "require #{s.inspect}" }.join ";"
 end
 
 task :repro do
@@ -46,9 +46,9 @@ task :repro do
   run "#{ruby} -e '#{req "test*"}' -- --seed 3911"
 
   banner "Reduce the problem down to the minimal files"
-  run "#{ruby} bin/minitest_bisect_files --seed 3911 badtest/test*.rb"
+  run "#{ruby} bin/minitest_bisect_files --seed 3911 example/test*.rb"
 
-  banner "Reduce the problem down te the minimal tests"
+  banner "Reduce the problem down to the minimal methods"
   run "#{ruby} bin/minitest_bisect #{ruby} -e '#{req "test_bad[14]"}' -- --seed 3911"
 end
 
