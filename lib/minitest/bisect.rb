@@ -7,6 +7,22 @@ class Minitest::Bisect
     new.run cmd
   end
 
+  def run cmd
+    puts "Reproducing failure..."
+
+    s = repro cmd
+
+    abort "Could not reproduce error. Aborting" unless s
+
+    culprits, bad = extract_culprits s
+
+    puts "OK... reproduced the failure"
+    puts "The bad test is: #{bad}"
+    puts
+
+    bisect cmd, culprits, bad
+  end
+
   def build_cmd cmd, culprits, bad
     return false if bad and culprits.empty?
 
@@ -59,22 +75,6 @@ class Minitest::Bisect
     puts cmd
     puts
     system cmd
-  end
-
-  def run cmd
-    puts "Reproducing failure..."
-
-    s = repro cmd
-
-    abort "Could not reproduce error. Aborting" unless s
-
-    culprits, bad = extract_culprits s
-
-    puts "OK... reproduced the failure"
-    puts "The bad test is: #{bad}"
-    puts
-
-    bisect cmd, culprits, bad
   end
 end
 
