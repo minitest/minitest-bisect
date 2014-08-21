@@ -24,6 +24,9 @@ def banner text
   puts "# #{text} ::"
   puts "#" * 70
   puts
+  print "Press return to continue "
+  $stdin.gets
+  puts
 end
 
 def run cmd
