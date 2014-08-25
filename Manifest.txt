@@ -14,7 +14,6 @@ example/test_bad6.rb
 example/test_bad7.rb
 example/test_bad8.rb
 lib/minitest/bisect.rb
-lib/minitest/bisect_files.rb
 lib/minitest/find_minimal_combination.rb
 lib/minitest/server.rb
 lib/minitest/server_plugin.rb

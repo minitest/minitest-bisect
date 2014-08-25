@@ -1,25 +1,67 @@
 require "minitest/find_minimal_combination"
 require "minitest/server"
-require "minitest/bisect_files"
+require "shellwords"
 
 class Minitest::Bisect
   VERSION = "1.0.0"
 
-  attr_accessor :tainted, :failures, :culprits
+  attr_accessor :tainted, :failures, :culprits, :mode, :seen_bad
   alias :tainted? :tainted
 
   def self.run files
-    new.run Minitest::BisectFiles.new.run files
+    new.run files
   end
 
   def initialize
+    self.mode = :files
     self.culprits = []
     self.tainted = false
     self.failures = Hash.new { |h,k| h[k] = Hash.new { |h2,k2| h2[k2] = [] } }
   end
 
-  def run cmd
+  def run files
     Minitest::Server.run self
+
+    bisect_methods bisect_files files
+  ensure
+    Minitest::Server.stop
+  end
+
+  def bisect_files files
+    files, flags = files.partition { |arg| File.file? arg }
+    rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
+    mt_flags += ["-s", $$]
+
+    shh = " &> /dev/null"
+
+    puts "reproducing..."
+    system build_files_cmd(nil, files, nil, rb_flags, mt_flags) + shh
+    abort "Reproduction run passed? Aborting." unless tainted?
+    puts "reproduced"
+
+    count = 0
+
+    found = files.find_minimal_combination do |test|
+      count += 1
+
+      puts "# of culprits: #{test.size}"
+
+      system build_files_cmd(nil, test, nil, rb_flags, mt_flags) + shh
+
+      self.tainted?
+    end
+
+    puts
+    puts "Final found in #{count} steps:"
+    puts
+    cmd = build_files_cmd nil, found, nil, rb_flags, mt_flags
+    puts cmd
+    cmd
+  end
+
+  def bisect_methods cmd
+    self.mode = :methods
+    self.seen_bad = false
 
     puts "reproducing..."
     repro cmd
@@ -49,8 +91,18 @@ class Minitest::Bisect
     puts cmd
     puts
     system cmd
-  ensure
-    Minitest::Server.stop
+  end
+
+  def build_files_cmd cmd, culprits, bad, rb, mt
+    return false if bad and culprits.empty?
+
+    self.tainted = false
+    failures.clear
+
+    tests = (culprits + [bad]).flatten.compact.map {|f| %(require "./#{f}")}
+    tests = tests.join " ; "
+
+    %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin})
   end
 
   def build_cmd cmd, culprits, bad
@@ -72,15 +124,18 @@ class Minitest::Bisect
   end
 
   def result file, klass, method, fails, assertions, time
-    @seen_bad ||= false
-    if fails.empty? then
-      unless @seen_bad then
-        culprits << "#{klass}##{method}" # UGH
+    case mode
+    when :methods then
+      if fails.empty? then
+        culprits << "#{klass}##{method}" unless seen_bad # UGH
+      else
+        self.seen_bad = true
       end
-    else
+    end
+
+    unless fails.empty?
       self.tainted = true
       self.failures[file][klass] << method
-      @seen_bad = true
     end
   end
 end
