@@ -4,6 +4,7 @@ require "shellwords"
 
 class Minitest::Bisect
   VERSION = "1.0.0"
+  SHH = " &> /dev/null"
 
   attr_accessor :tainted, :failures, :culprits, :mode, :seen_bad
   alias :tainted? :tainted
@@ -32,10 +33,8 @@ class Minitest::Bisect
     rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
     mt_flags += ["-s", $$]
 
-    shh = " &> /dev/null"
-
     puts "reproducing..."
-    system build_files_cmd(nil, files, nil, rb_flags, mt_flags) + shh
+    system "#{build_files_cmd files, rb_flags, mt_flags} #{SHH}"
     abort "Reproduction run passed? Aborting." unless tainted?
     puts "reproduced"
 
@@ -46,7 +45,7 @@ class Minitest::Bisect
 
       puts "# of culprits: #{test.size}"
 
-      system build_files_cmd(nil, test, nil, rb_flags, mt_flags) + shh
+      system "#{build_files_cmd test, rb_flags, mt_flags} #{SHH}"
 
       self.tainted?
     end
@@ -54,7 +53,7 @@ class Minitest::Bisect
     puts
     puts "Final found in #{count} steps:"
     puts
-    cmd = build_files_cmd nil, found, nil, rb_flags, mt_flags
+    cmd = build_files_cmd found, rb_flags, mt_flags
     puts cmd
     cmd
   end
@@ -87,25 +86,22 @@ class Minitest::Bisect
     puts
     puts "Final found in #{count} steps:"
     puts
-    cmd = build_cmd cmd, found, bad
+    cmd = build_methods_cmd cmd, found, bad
     puts cmd
     puts
     system cmd
   end
 
-  def build_files_cmd cmd, culprits, bad, rb, mt
-    return false if bad and culprits.empty?
-
+  def build_files_cmd culprits, rb, mt
     self.tainted = false
     failures.clear
 
-    tests = (culprits + [bad]).flatten.compact.map {|f| %(require "./#{f}")}
-    tests = tests.join " ; "
+    tests = culprits.flatten.compact.map {|f| %(require "./#{f}")}.join " ; "
 
     %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin})
   end
 
-  def build_cmd cmd, culprits, bad
+  def build_methods_cmd cmd, culprits, bad
     return false if bad and culprits.empty?
 
     re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
@@ -118,9 +114,7 @@ class Minitest::Bisect
     self.tainted = false
     failures.clear
 
-    cmd = build_cmd cmd, culprits, bad
-    shh = " &> /dev/null"
-    system "#{cmd} #{shh}"
+    system "#{build_methods_cmd cmd, culprits, bad} #{SHH}"
   end
 
   def result file, klass, method, fails, assertions, time
