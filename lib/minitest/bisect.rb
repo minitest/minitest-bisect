@@ -15,21 +15,25 @@ class Minitest::Bisect
 
   def initialize
     self.culprits = []
-    self.tainted  = false
     self.failures = Hash.new { |h,k| h[k] = Hash.new { |h2,k2| h2[k2] = [] } }
-    self.seen_bad = false
   end
 
   def reset
-    self.tainted = false
-    self.failures.clear
+    self.seen_bad = false
+    self.tainted  = false
+    failures.clear
     # not clearing culprits on purpose
   end
 
   def run files
     Minitest::Server.run self
 
-    bisect_methods bisect_files files
+    cmd = bisect_methods bisect_files files
+
+    puts "Final reproduction:"
+    puts
+
+    system cmd
   ensure
     Minitest::Server.stop
   end
@@ -87,7 +91,7 @@ class Minitest::Bisect
     cmd = build_methods_cmd cmd, found, bad
     puts cmd
     puts
-    system cmd
+    cmd
   end
 
   def build_files_cmd culprits, rb, mt
