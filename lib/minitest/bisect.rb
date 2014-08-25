@@ -1,19 +1,33 @@
 require "minitest/find_minimal_combination"
+require "minitest/server"
 
 class Minitest::Bisect
   VERSION = "1.0.0"
+
+  attr_accessor :tainted, :failures, :culprits
+  alias :tainted? :tainted
 
   def self.run cmd
     new.run cmd
   end
 
+  def initialize
+    self.culprits = []
+    self.tainted = false
+    self.failures = Hash.new { |h,k| h[k] = Hash.new { |h2,k2| h2[k2] = [] } }
+  end
+
   def run cmd
+    Minitest::Server.run self
+
     puts "reproducing..."
-    s = repro cmd
-    abort "Reproduction run passed? Aborting." unless s
+    repro cmd
+    abort "Reproduction run passed? Aborting." unless tainted?
     puts "reproduced"
 
-    culprits, bad = extract_culprits s
+    # from: {"example/helper.rb"=>{"TestBad4"=>["test_bad4_4"]}}
+    #   to: "TestBad4#test_bad4_4"
+    bad = failures.values.first.to_a.join "#"
 
     count = 0
 
@@ -23,6 +37,8 @@ class Minitest::Bisect
       puts "# of culprits: #{test.size}"
 
       repro cmd, test, bad
+
+      self.tainted?
     end
 
     puts
@@ -32,6 +48,8 @@ class Minitest::Bisect
     puts cmd
     puts
     system cmd
+  ensure
+    Minitest::Server.stop
   end
 
   def build_cmd cmd, culprits, bad
@@ -39,23 +57,30 @@ class Minitest::Bisect
 
     re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
     cmd += ["-n", "'/^#{re}$/'"] if bad
-    cmd << "-v" unless cmd.include? "-v"
+    cmd << "-s" << $$
 
     # cheap but much more readable version of shellwords' shelljoin
     cmd.map { |s| s =~ / / ? "'#{s}'" : s }.join " "
   end
 
-  def extract_culprits s
-    a = s.scan(/^(\w+\#\w+) = \d+\.\d+ s = (.)/)
-    i = a.index { |(_,r)| r =~ /[EF]/ }
-    a.map!(&:first)
+  def repro cmd, culprits = [], bad = nil
+    self.tainted = false
+    failures.clear
 
-    return a[0...i], a[i]
+    cmd = build_cmd cmd, culprits, bad
+    system "#{cmd} &> /dev/null"
   end
 
-  def repro cmd, culprits = [], bad = nil
-    cmd = build_cmd cmd, culprits, bad
-    s = `#{cmd}`
-    not $?.success? and s
+  def result file, klass, method, fails, assertions, time
+    @seen_bad ||= false
+    if fails.empty? then
+      unless @seen_bad then
+        culprits << "#{klass}##{method}" # UGH
+      end
+    else
+      self.tainted = true
+      self.failures[file][klass] << method
+      @seen_bad = true
+    end
   end
 end
