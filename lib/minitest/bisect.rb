@@ -20,6 +20,12 @@ class Minitest::Bisect
     self.failures = Hash.new { |h,k| h[k] = Hash.new { |h2,k2| h2[k2] = [] } }
   end
 
+  def reset
+    self.tainted = false
+    self.failures.clear
+    # not clearing culprits on purpose
+  end
+
   def run files
     Minitest::Server.run self
 
@@ -85,8 +91,7 @@ class Minitest::Bisect
   end
 
   def build_files_cmd culprits, rb, mt
-    self.tainted = false
-    failures.clear
+    reset
 
     tests = culprits.flatten.compact.map {|f| %(require "./#{f}")}.join " ; "
 
@@ -103,8 +108,7 @@ class Minitest::Bisect
   end
 
   def repro cmd, culprits = [], bad = nil
-    self.tainted = false
-    failures.clear
+    reset
 
     system "#{build_methods_cmd cmd, culprits, bad} #{SHH}"
   end
