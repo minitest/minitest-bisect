@@ -38,11 +38,7 @@ class Minitest::Bisect
     abort "Reproduction run passed? Aborting." unless tainted?
     puts "reproduced"
 
-    count = 0
-
-    found = files.find_minimal_combination do |test|
-      count += 1
-
+    found, count = files.find_minimal_combination_and_count do |test|
       puts "# of culprits: #{test.size}"
 
       system "#{build_files_cmd test, rb_flags, mt_flags} #{SHH}"
@@ -71,11 +67,7 @@ class Minitest::Bisect
     #   to: "TestBad4#test_bad4_4"
     bad = failures.values.first.to_a.join "#"
 
-    count = 0
-
-    found = culprits.find_minimal_combination do |test|
-      count += 1
-
+    found, count = culprits.find_minimal_combination_and_count do |test|
       puts "# of culprits: #{test.size}"
 
       repro cmd, test, bad

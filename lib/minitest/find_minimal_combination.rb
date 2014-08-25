@@ -92,4 +92,15 @@ class Array
   def find_minimal_combination &test
     ComboFinder.new.find_minimal_combination(self, &test)
   end
+
+  def find_minimal_combination_and_count
+    count = 0
+
+    found = self.find_minimal_combination do |ary|
+      count += 1
+      yield ary
+    end
+
+    return found, count
+  end
 end
