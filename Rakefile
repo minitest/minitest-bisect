@@ -50,7 +50,7 @@ task :repro do
   banner "Original run that causes the test order dependency bug"
   run "#{ruby} -e '#{req "test*"}' -- --seed 3911"
 
-  banner "Reduce the problem down to the minimal files"
+  banner "Reduce the problem down to the minimal reproduction"
   run "#{ruby} bin/minitest_bisect -Ilib --seed 3911 example/test*.rb"
 end
 
