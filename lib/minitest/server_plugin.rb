@@ -11,7 +11,6 @@ module Minitest
 
   def self.plugin_server_init options
     if @server then
-      warn "Adding Server Reporter"
       require "minitest/server"
       self.reporter << Minitest::ServerReporter.new(@server)
     end
