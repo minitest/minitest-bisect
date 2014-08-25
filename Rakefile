@@ -24,9 +24,11 @@ def banner text
   puts "# #{text} ::"
   puts "#" * 70
   puts
-  print "Press return to continue "
-  $stdin.gets
-  puts
+  unless ENV["SLEEP"] == "0" then
+    print "Press return to continue "
+    $stdin.gets
+    puts
+  end
 end
 
 def run cmd
