@@ -51,7 +51,7 @@ class Minitest::Bisect
     puts "reproduced"
 
     found, count = files.find_minimal_combination_and_count do |test|
-      puts "# of culprits: #{test.size}"
+      puts "# of culprit files: #{test.size}"
 
       system "#{build_files_cmd test, rb_flags, mt_flags} #{SHH}"
 
@@ -59,7 +59,7 @@ class Minitest::Bisect
     end
 
     puts
-    puts "Final found in #{count} steps:"
+    puts "Minimal files found in #{count} steps:"
     puts
     cmd = build_files_cmd found, rb_flags, mt_flags
     puts cmd
@@ -78,7 +78,7 @@ class Minitest::Bisect
     bad = failures.values.first.to_a.join "#"
 
     found, count = culprits.find_minimal_combination_and_count do |test|
-      puts "# of culprits: #{test.size}"
+      puts "# of culprit methods: #{test.size}"
 
       system "#{build_methods_cmd cmd, test, bad} #{SHH}"
 
@@ -86,7 +86,7 @@ class Minitest::Bisect
     end
 
     puts
-    puts "Final found in #{count} steps:"
+    puts "Minimal methods found in #{count} steps:"
     puts
     cmd = build_methods_cmd cmd, found, bad
     puts cmd
