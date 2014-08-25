@@ -14,10 +14,10 @@ class Minitest::Bisect
   end
 
   def initialize
-    self.mode = :files
     self.culprits = []
-    self.tainted = false
+    self.tainted  = false
     self.failures = Hash.new { |h,k| h[k] = Hash.new { |h2,k2| h2[k2] = [] } }
+    self.seen_bad = false
   end
 
   def reset
@@ -35,6 +35,8 @@ class Minitest::Bisect
   end
 
   def bisect_files files
+    self.mode = :files
+
     files, flags = files.partition { |arg| File.file? arg }
     rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
     mt_flags += ["-s", $$]
@@ -62,15 +64,13 @@ class Minitest::Bisect
 
   def bisect_methods cmd
     self.mode = :methods
-    self.seen_bad = false
 
     puts "reproducing..."
     system "#{build_methods_cmd cmd} #{SHH}"
     abort "Reproduction run passed? Aborting." unless tainted?
     puts "reproduced"
 
-    # from: {"example/helper.rb"=>{"TestBad4"=>["test_bad4_4"]}}
-    #   to: "TestBad4#test_bad4_4"
+    # from: {"file.rb"=>{"Class"=>["test_method"]}} to: "Class#test_method"
     bad = failures.values.first.to_a.join "#"
 
     found, count = culprits.find_minimal_combination_and_count do |test|
@@ -108,8 +108,7 @@ class Minitest::Bisect
   end
 
   def result file, klass, method, fails, assertions, time
-    case mode
-    when :methods then
+    if mode == :methods then
       if fails.empty? then
         culprits << "#{klass}##{method}" unless seen_bad # UGH
       else
