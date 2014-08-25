@@ -65,7 +65,7 @@ class Minitest::Bisect
     self.seen_bad = false
 
     puts "reproducing..."
-    repro cmd
+    system "#{build_methods_cmd cmd} #{SHH}"
     abort "Reproduction run passed? Aborting." unless tainted?
     puts "reproduced"
 
@@ -76,7 +76,7 @@ class Minitest::Bisect
     found, count = culprits.find_minimal_combination_and_count do |test|
       puts "# of culprits: #{test.size}"
 
-      repro cmd, test, bad
+      system "#{build_methods_cmd cmd, test, bad} #{SHH}"
 
       self.tainted?
     end
@@ -98,19 +98,13 @@ class Minitest::Bisect
     %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin})
   end
 
-  def build_methods_cmd cmd, culprits, bad
-    return false if bad and culprits.empty?
+  def build_methods_cmd cmd, culprits = [], bad = nil
+    reset
 
     re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
     cmd += " -n '/^#{re}$/'" if bad # += because we need a copy
 
     cmd
-  end
-
-  def repro cmd, culprits = [], bad = nil
-    reset
-
-    system "#{build_methods_cmd cmd, culprits, bad} #{SHH}"
   end
 
   def result file, klass, method, fails, assertions, time
