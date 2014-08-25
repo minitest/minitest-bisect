@@ -22,8 +22,10 @@ class Minitest::BisectFiles
     rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
     mt_flags += ["-s", $$]
 
+    shh = " &> /dev/null"
+
     puts "reproducing..."
-    system build_cmd(nil, files, nil, rb_flags, mt_flags)
+    system build_cmd(nil, files, nil, rb_flags, mt_flags) + shh
     abort "Reproduction run passed? Aborting." unless tainted?
     puts "reproduced"
 
@@ -34,7 +36,7 @@ class Minitest::BisectFiles
 
       puts "# of culprits: #{test.size}"
 
-      system build_cmd(nil, test, nil, rb_flags, mt_flags)
+      system build_cmd(nil, test, nil, rb_flags, mt_flags) + shh
 
       self.tainted?
     end
@@ -42,7 +44,9 @@ class Minitest::BisectFiles
     puts
     puts "Final found in #{count} steps:"
     puts
-    puts build_cmd nil, found, nil, rb_flags, mt_flags
+    cmd = build_cmd nil, found, nil, rb_flags, mt_flags
+    puts cmd
+    cmd
   ensure
     Minitest::Server.stop
   end
@@ -55,9 +59,8 @@ class Minitest::BisectFiles
 
     tests = (culprits + [bad]).flatten.compact.map {|f| %(require "./#{f}")}
     tests = tests.join " ; "
-    shh   = "&> /dev/null"
 
-    %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin} #{shh})
+    %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin})
   end
 
   def result file, klass, method, fails, assertions, time

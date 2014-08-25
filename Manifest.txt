@@ -4,7 +4,6 @@ Manifest.txt
 README.rdoc
 Rakefile
 bin/minitest_bisect
-bin/minitest_bisect_files
 example/helper.rb
 example/test_bad1.rb
 example/test_bad2.rb

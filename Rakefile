@@ -51,10 +51,7 @@ task :repro do
   run "#{ruby} -e '#{req "test*"}' -- --seed 3911"
 
   banner "Reduce the problem down to the minimal files"
-  run "#{ruby} bin/minitest_bisect_files -Ilib --seed 3911 example/test*.rb"
-
-  banner "Reduce the problem down to the minimal methods"
-  run "#{ruby} bin/minitest_bisect #{ruby} -e '#{req "test_bad[14]"}' -- --seed 3911"
+  run "#{ruby} bin/minitest_bisect -Ilib --seed 3911 example/test*.rb"
 end
 
 # vim: syntax=ruby

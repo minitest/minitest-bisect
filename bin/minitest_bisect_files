@@ -1,5 +1,0 @@
-#!/usr/bin/ruby -w
-
-require "minitest/bisect_files"
-
-Minitest::BisectFiles.run ARGV

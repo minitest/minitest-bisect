@@ -1,5 +1,6 @@
 require "minitest/find_minimal_combination"
 require "minitest/server"
+require "minitest/bisect_files"
 
 class Minitest::Bisect
   VERSION = "1.0.0"
@@ -7,8 +8,8 @@ class Minitest::Bisect
   attr_accessor :tainted, :failures, :culprits
   alias :tainted? :tainted
 
-  def self.run cmd
-    new.run cmd
+  def self.run files
+    new.run Minitest::BisectFiles.new.run files
   end
 
   def initialize
@@ -56,11 +57,9 @@ class Minitest::Bisect
     return false if bad and culprits.empty?
 
     re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
-    cmd += ["-n", "'/^#{re}$/'"] if bad
-    cmd << "-s" << $$
+    cmd += " -n '/^#{re}$/'" if bad # += because we need a copy
 
-    # cheap but much more readable version of shellwords' shelljoin
-    cmd.map { |s| s =~ / / ? "'#{s}'" : s }.join " "
+    cmd
   end
 
   def repro cmd, culprits = [], bad = nil
@@ -68,7 +67,8 @@ class Minitest::Bisect
     failures.clear
 
     cmd = build_cmd cmd, culprits, bad
-    system "#{cmd} &> /dev/null"
+    shh = " &> /dev/null"
+    system "#{cmd} #{shh}"
   end
 
   def result file, klass, method, fails, assertions, time
