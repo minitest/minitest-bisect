@@ -29,7 +29,7 @@ module Minitest
     end
 
     def start
-      client.failures.clear
+      client.failures.clear # TODO: push down to subclass
     end
 
     def result file, klass, method, fails, assertions, time
