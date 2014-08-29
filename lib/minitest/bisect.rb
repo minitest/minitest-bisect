@@ -28,7 +28,17 @@ class Minitest::Bisect
   def run files
     Minitest::Server.run self
 
-    cmd = bisect_methods bisect_files files
+    cmd = nil
+
+    if :until_I_have_negative_filtering_in_minitest then
+      files, flags = files.partition { |arg| File.file? arg }
+      rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
+      mt_flags += ["-s", $$]
+
+      cmd = bisect_methods build_files_cmd(files, rb_flags, mt_flags)
+    else
+      cmd = bisect_methods bisect_files files
+    end
 
     puts "Final reproduction:"
     puts
@@ -105,8 +115,20 @@ class Minitest::Bisect
   def build_methods_cmd cmd, culprits = [], bad = nil
     reset
 
-    re = Regexp.union(culprits + [bad]).to_s.gsub(/-mix/, "") if bad
-    cmd += " -n '/^#{re}$/'" if bad # += because we need a copy
+    if bad then
+      re = []
+
+      bbc = (culprits + [bad]).map { |s| s.split(/#/) }.group_by(&:first)
+      bbc.each do |klass, methods|
+        methods = methods.map(&:last).flatten
+
+        re << /#{klass}##{Regexp.union(methods)}/
+      end
+
+      re = Regexp.union(re).to_s.gsub(/-mix/, "")
+
+      cmd += " -n '/^#{re}$/'" if bad
+    end
 
     cmd
   end
