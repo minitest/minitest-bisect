@@ -36,7 +36,7 @@ def run cmd
 end
 
 def req glob
-  Dir["example/#{glob}.rb"].map { |s| "require #{s.inspect}" }.join ";"
+  Dir["#{glob}.rb"].map { |s| "require #{s.inspect}" }.join ";"
 end
 
 task :repro do
@@ -48,10 +48,25 @@ task :repro do
   ruby = "ruby -I.:lib"
 
   banner "Original run that causes the test order dependency bug"
-  run "#{ruby} -e '#{req "test*"}' -- --seed 3911"
+  run "#{ruby} -e '#{req "example/test*"}' -- --seed 3911"
 
   banner "Reduce the problem down to the minimal reproduction"
   run "#{ruby} bin/minitest_bisect -Ilib --seed 3911 example/test*.rb"
+end
+
+task :many do
+  unless ENV.has_key? "SLEEP" then
+    warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
+    warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
+  end
+
+  ruby = "ruby -I.:lib"
+
+  banner "Original run that causes the test order dependency bug"
+  run "#{ruby} -e '#{req "example-many/test*"}' -- --seed 27083"
+
+  banner "Reduce the problem down to the minimal reproduction"
+  run "#{ruby} bin/minitest_bisect -Ilib --seed 27083 example-many/test*.rb"
 end
 
 # vim: syntax=ruby
