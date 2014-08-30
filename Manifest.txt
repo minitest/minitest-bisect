@@ -4,6 +4,15 @@ Manifest.txt
 README.rdoc
 Rakefile
 bin/minitest_bisect
+example-many/helper.rb
+example-many/test_bad1.rb
+example-many/test_bad2.rb
+example-many/test_bad3.rb
+example-many/test_bad4.rb
+example-many/test_bad5.rb
+example-many/test_bad6.rb
+example-many/test_bad7.rb
+example-many/test_bad8.rb
 example/helper.rb
 example/test_bad1.rb
 example/test_bad2.rb
