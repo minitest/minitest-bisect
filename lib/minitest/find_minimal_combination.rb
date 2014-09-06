@@ -28,6 +28,8 @@ class ComboFinder
     level, n_combos = 1, 1
     seen = {}
 
+    d "Total number of culprits: #{ary.size}"
+
     loop do
       size = 2 ** (Math.log(ary.size) / Math.log(2)).round
       divs = 2 ** level
@@ -36,11 +38,17 @@ class ComboFinder
 
       subsections = ary.each_slice(size/divs).to_a.combination(n_combos)
 
+      d
+      d "# new round!"
+      d "#   of subsections in this round: #{subsections.size}"
+      d
+
       found = subsections.find { |a|
         b = a.flatten
 
         next if seen[b]
 
+        d "#   trying #{b.size} at level #{level} / combo #{n_combos}"
         cache_result yield(b), b, seen
       }
 
@@ -50,19 +58,29 @@ class ComboFinder
 
         seen.delete ary
 
+        d "#   FOUND!"
+        d "#     search space size = #{ary.size}"
+        d "#     resetting level and n_combos to 1"
+
         level = n_combos = 1
       else
         if done then
           n_combos += 1
+          d "#   increasing n_combos to #{n_combos}"
           break if n_combos > size
         else
           level += 1
           n_combos = level
+          d "#   setting level to #{level} and n_combos to #{n_combos}"
         end
       end
     end
 
     ary
+  end
+
+  def d s=""
+    warn s if ENV["MTB_DEBUG"]
   end
 
   def cache_result result, data, cache

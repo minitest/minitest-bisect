@@ -4,7 +4,7 @@ require "shellwords"
 
 class Minitest::Bisect
   VERSION = "1.0.0"
-  SHH = " &> /dev/null"
+  SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " &> /dev/null"
 
   attr_accessor :tainted, :failures, :culprits, :mode, :seen_bad
   alias :tainted? :tainted
@@ -87,6 +87,7 @@ class Minitest::Bisect
     # from: {"file.rb"=>{"Class"=>["test_method"]}} to: "Class#test_method"
     bad = failures.values.first.to_a.join "#"
 
+    # culprits populated by initial reproduction via minitest/server
     found, count = culprits.find_minimal_combination_and_count do |test|
       puts "# of culprit methods: #{test.size}"
 
@@ -118,22 +119,34 @@ class Minitest::Bisect
     if bad then
       re = []
 
-      bbc = (culprits + [bad]).map { |s| s.split(/#/) }.group_by(&:first)
-      bbc.each do |klass, methods|
-        methods = methods.map(&:last).flatten
+      # bad by class, you perv
+      bbc = (culprits + [bad]).map { |s| s.split(/#/, 2) }.group_by(&:first)
 
-        re << /#{klass}##{Regexp.union(methods)}/
+      bbc.each do |klass, methods|
+        methods = methods.map(&:last).flatten.uniq.map { |method|
+          method.gsub(/([`'"!?&\[\]\(\)\|\+])/, '\\\\\1')
+        }
+
+        re << /#{klass}#(?:#{methods.join "|"})/.to_s[7..-2] # (?-mix:...)
       end
 
-      re = Regexp.union(re).to_s.gsub(/-mix/, "")
+      re = re.join("|").to_s.gsub(/-mix/, "")
 
-      cmd += " -n '/^#{re}$/'" if bad
+      cmd += " -v -n \"/^(?:#{re})$/\"" if bad
+    end
+
+    if ENV["MTB_VERBOSE"].to_i >= 1 then
+      puts
+      puts cmd
+      puts
     end
 
     cmd
   end
 
   def result file, klass, method, fails, assertions, time
+    fails.reject! { |fail| Minitest::Skip === fail }
+
     if mode == :methods then
       if fails.empty? then
         culprits << "#{klass}##{method}" unless seen_bad # UGH
