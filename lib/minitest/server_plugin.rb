@@ -4,7 +4,7 @@ module Minitest
   @server = false
 
   def self.plugin_server_options opts, options # :nodoc:
-    opts.on "-s", "--server=pid", Integer, "Connect to minitest server w/ pid." do |s|
+    opts.on "--server=pid", Integer, "Connect to minitest server w/ pid." do |s|
       @server = s
     end
   end

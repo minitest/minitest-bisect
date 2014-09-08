@@ -33,7 +33,7 @@ class Minitest::Bisect
     if :until_I_have_negative_filtering_in_minitest then
       files, flags = files.partition { |arg| File.file? arg }
       rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
-      mt_flags += ["-s", $$]
+      mt_flags += ["--server", $$]
 
       cmd = bisect_methods build_files_cmd(files, rb_flags, mt_flags)
     else
@@ -43,7 +43,7 @@ class Minitest::Bisect
     puts "Final reproduction:"
     puts
 
-    system cmd
+    system cmd.sub(/--server \d+/, "")
   ensure
     Minitest::Server.stop
   end
@@ -53,7 +53,7 @@ class Minitest::Bisect
 
     files, flags = files.partition { |arg| File.file? arg }
     rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
-    mt_flags += ["-s", $$]
+    mt_flags += ["--server", $$]
 
     puts "reproducing..."
     system "#{build_files_cmd files, rb_flags, mt_flags} #{SHH}"
@@ -132,7 +132,7 @@ class Minitest::Bisect
 
       re = re.join("|").to_s.gsub(/-mix/, "")
 
-      cmd += " -v -n \"/^(?:#{re})$/\"" if bad
+      cmd += " -n \"/^(?:#{re})$/\"" if bad
     end
 
     if ENV["MTB_VERBOSE"].to_i >= 1 then
