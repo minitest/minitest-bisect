@@ -1,3 +1,18 @@
+=== 1.1.0 / 2014-09-08
+
+* 4 minor enhancements:
+
+  * Added MTB_DEBUG env var to add debugging output to bisect trials.
+  * Added MTB_VERBOSE env var to show test output.
+  * Remove `--server ###` from final repro to make it easer to copy/paste/debug.
+  * Removed `-s` option. Now only `--server` remains to be unambiguous.
+
+* 3 bug fixes:
+
+  * Accidentally left in -v while I was debugging something.
+  * Reject skips in culprit accounting.
+  * Switched to manual escaping of regexp. Shellwords was horribly overzealous.
+
 === 1.0.0 / 2014-07-16
 
 * 1 major enhancement
