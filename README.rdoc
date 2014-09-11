@@ -70,7 +70,7 @@ So, you run the tests again, but this time with minitest_bisect.
 Provide the seed given in the failure so the tests always run in the
 same order and reproduce every time.
 
-minitest_bisect with first minimize the number of files, then it will
+minitest_bisect will first minimize the number of files, then it will
 turn around and minimize the number of methods.
 
   $ minitest_bisect --seed 3911 example/test*.rb
