@@ -128,9 +128,9 @@ determine what side-effects (or lack thereof) are causing your test
 failure when run in this specific order.
 
 This happens in a single run. Depending on how many files / tests you
-have and how long they take, the first phase might take a long time.
-The second phase might also take a while, but each iteration should
-reduce the number of tests so it should get quicker with each step.
+have and how long they take, the minimization might take a long time,
+but each iteration can reduce the number of tests so it should get
+quicker with time.
 
 == REQUIREMENTS:
 
