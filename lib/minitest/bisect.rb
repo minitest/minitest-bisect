@@ -145,7 +145,14 @@ class Minitest::Bisect
     cmd
   end
 
-  def result file, klass, method, fails, assertions, time
+  ############################################################
+  # Server Methods:
+
+  def minitest_start
+    self.failures.clear
+  end
+
+  def minitest_result file, klass, method, fails, assertions, time
     fails.reject! { |fail| Minitest::Skip === fail }
 
     if mode == :methods then

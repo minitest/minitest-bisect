@@ -29,13 +29,13 @@ module Minitest
     end
 
     def start
-      client.failures.clear # TODO: push down to subclass
+      client.minitest_start
     end
 
     def result file, klass, method, fails, assertions, time
       file = file.sub(/^#{TOPDIR}/, "")
 
-      client.result file, klass, method, fails, assertions, time
+      client.minitest_result file, klass, method, fails, assertions, time
     end
 
     def report
