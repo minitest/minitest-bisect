@@ -7,9 +7,13 @@ Hoe.plugin :isolate
 Hoe.plugin :seattlerb
 Hoe.plugin :rdoc
 
+Hoe.add_include_dirs "../../minitest-server/dev/lib"
+
 Hoe.spec "minitest-bisect" do
   developer "Ryan Davis", "ryand-ruby@zenspider.com"
   license "MIT"
+
+  dependency "minitest-server", "~> 1.0"
 end
 
 require "rake/testtask"
