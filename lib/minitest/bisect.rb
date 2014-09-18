@@ -3,7 +3,7 @@ require "minitest/server"
 require "shellwords"
 
 class Minitest::Bisect
-  VERSION = "1.1.0"
+  VERSION = "1.2.0"
 
   SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " &> /dev/null"
 

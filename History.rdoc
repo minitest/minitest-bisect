@@ -1,3 +1,10 @@
+=== 1.2.0 / 2014-09-18
+
+* 2 minor enhancements:
+
+  * Extracted minitest-server.
+  * Renamed server/client methods to start with minitest_*
+
 === 1.1.0 / 2014-09-08
 
 * 4 minor enhancements:
