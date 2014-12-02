@@ -31,7 +31,7 @@ class Minitest::Bisect
 
     cmd = nil
 
-    if :until_I_have_negative_filtering_in_minitest then
+    if :until_I_have_negative_filtering_in_minitest != 0 then
       files, flags = files.partition { |arg| File.file? arg }
       rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
       mt_flags += ["--server", $$]
