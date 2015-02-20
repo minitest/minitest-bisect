@@ -79,7 +79,7 @@ class ComboFinder
     ary
   end
 
-  def d s=""
+  def d s = ""
     warn s if ENV["MTB_DEBUG"]
   end
 

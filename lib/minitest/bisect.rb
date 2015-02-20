@@ -16,7 +16,7 @@ class Minitest::Bisect
 
   def initialize
     self.culprits = []
-    self.failures = Hash.new { |h,k| h[k] = Hash.new { |h2,k2| h2[k2] = [] } }
+    self.failures = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = [] } }
   end
 
   def reset
@@ -109,7 +109,7 @@ class Minitest::Bisect
   def build_files_cmd culprits, rb, mt
     reset
 
-    tests = culprits.flatten.compact.map {|f| %(require "./#{f}")}.join " ; "
+    tests = culprits.flatten.compact.map { |f| %(require "./#{f}") }.join " ; "
 
     %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin})
   end
@@ -163,9 +163,9 @@ class Minitest::Bisect
       end
     end
 
-    unless fails.empty?
-      self.tainted = true
-      self.failures[file][klass] << method
-    end
+    return if fails.empty?
+
+    self.tainted = true
+    self.failures[file][klass] << method
   end
 end
