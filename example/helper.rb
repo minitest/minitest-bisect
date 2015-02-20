@@ -7,7 +7,7 @@ def create_test suffix, n_methods, bad_methods = {}
 
   Class.new(Minitest::Test) do
     n_methods.times do |n|
-      n = n + 1
+      n += 1
       define_method "test_bad#{suffix}_#{n}" do
         sleep delay if delay > 0
 
