@@ -13,6 +13,7 @@ Hoe.spec "minitest-bisect" do
   developer "Ryan Davis", "ryand-ruby@zenspider.com"
   license "MIT"
 
+  dependency "rake", "> 0", :development
   dependency "minitest-server", "~> 1.0"
 end
 
@@ -28,11 +29,12 @@ def banner text
   puts "# #{text} ::"
   puts "#" * 70
   puts
-  unless ENV["SLEEP"] == "0" then
-    print "Press return to continue "
-    $stdin.gets
-    puts
-  end
+
+  return if ENV["SLEEP"] == "0"
+
+  print "Press return to continue "
+  $stdin.gets
+  puts
 end
 
 def run cmd
@@ -44,7 +46,7 @@ def req glob
 end
 
 task :repro do
-  unless ENV.has_key? "SLEEP" then
+  unless ENV.key? "SLEEP" then
     warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
     warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
   end
@@ -59,7 +61,7 @@ task :repro do
 end
 
 task :many do
-  unless ENV.has_key? "SLEEP" then
+  unless ENV.key? "SLEEP" then
     warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
     warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
   end
