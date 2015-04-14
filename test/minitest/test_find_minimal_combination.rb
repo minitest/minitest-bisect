@@ -2,7 +2,6 @@
 
 $: << "." << "lib"
 
-gem "minitest"
 require "minitest/autorun"
 require "minitest/find_minimal_combination"
 
