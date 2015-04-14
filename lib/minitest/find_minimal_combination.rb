@@ -40,7 +40,7 @@ class ComboFinder
 
       d
       d "# new round!"
-      d "#   of subsections in this round: #{subsections.size}"
+      d "#   of subsections in this round: #{subsections.to_a.size}"
       d
 
       found = subsections.find { |a|
