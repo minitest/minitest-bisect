@@ -5,7 +5,7 @@ require "shellwords"
 class Minitest::Bisect
   VERSION = "1.2.1"
 
-  SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " &> /dev/null"
+  SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " > /dev/null 2>&1"
 
   attr_accessor :tainted, :failures, :culprits, :mode, :seen_bad
   alias :tainted? :tainted
