@@ -1,11 +1,18 @@
 require "minitest/find_minimal_combination"
 require "minitest/server"
 require "shellwords"
+require "rbconfig"
 
 class Minitest::Bisect
   VERSION = "1.2.1"
 
   SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " > /dev/null 2>&1"
+
+  # Borrowed from rake
+  RUBY = ENV['RUBY'] ||
+    File.join(RbConfig::CONFIG['bindir'],
+              RbConfig::CONFIG['ruby_install_name'] +
+                RbConfig::CONFIG['EXEEXT']).sub(/.*\s.*/m, '"\&"')
 
   attr_accessor :tainted, :failures, :culprits, :mode, :seen_bad
   alias :tainted? :tainted
@@ -111,7 +118,7 @@ class Minitest::Bisect
 
     tests = culprits.flatten.compact.map { |f| %(require "./#{f}") }.join " ; "
 
-    %(ruby #{rb.shelljoin} -e '#{tests}' -- #{mt.shelljoin})
+    %(#{RUBY} #{rb.shelljoin} -e '#{tests}' -- #{mt.map(&:to_s).shelljoin})
   end
 
   def build_methods_cmd cmd, culprits = [], bad = nil
