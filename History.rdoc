@@ -1,3 +1,10 @@
+=== 1.2.2 / 2015-04-27
+
+* 2 bug fixes:
+
+  * Fixed SHH variable to work with more shell variants. (jeremyevans)
+  * Fixed problems with running in jruby. (jeremyevans)
+
 === 1.2.1 / 2014-12-12
 
 * 1 bug fix:

@@ -4,7 +4,7 @@ require "shellwords"
 require "rbconfig"
 
 class Minitest::Bisect
-  VERSION = "1.2.1"
+  VERSION = "1.2.2"
 
   SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " > /dev/null 2>&1"
 
