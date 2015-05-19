@@ -6,7 +6,12 @@ require "rbconfig"
 class Minitest::Bisect
   VERSION = "1.2.2"
 
-  SHH = ENV["MTB_VERBOSE"].to_i >= 2 ? nil : " > /dev/null 2>&1"
+  mtbv = ENV["MTB_VERBOSE"].to_i
+  SHH = case
+        when mtbv == 1 then " > /dev/null"
+        when mtbv >= 2 then nil
+        else " > /dev/null 2>&1"
+        end
 
   # Borrowed from rake
   RUBY = ENV['RUBY'] ||
@@ -65,7 +70,7 @@ class Minitest::Bisect
 
     puts "reproducing..."
     system "#{build_files_cmd files, rb_flags, mt_flags} #{SHH}"
-    abort "Reproduction run passed? Aborting." unless tainted?
+    abort "Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify." unless tainted?
     puts "reproduced"
 
     found, count = files.find_minimal_combination_and_count do |test|
@@ -89,7 +94,7 @@ class Minitest::Bisect
 
     puts "reproducing..."
     system "#{build_methods_cmd cmd} #{SHH}"
-    abort "Reproduction run passed? Aborting." unless tainted?
+    abort "Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify." unless tainted?
     puts "reproduced"
 
     # from: {"file.rb"=>{"Class"=>["test_method"]}} to: "Class#test_method"
