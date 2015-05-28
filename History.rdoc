@@ -1,3 +1,10 @@
+=== 1.3.0 / 2015-05-28
+
+* 2 minor enhancements:
+
+  * Improved output when failure doesn't repro.
+  * MTB_VERBOSE will print stderr from system calls.
+
 === 1.2.2 / 2015-04-27
 
 * 2 bug fixes:
