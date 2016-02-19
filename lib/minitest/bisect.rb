@@ -4,7 +4,7 @@ require "shellwords"
 require "rbconfig"
 
 class Minitest::Bisect
-  VERSION = "1.3.0"
+  VERSION = "1.3.1"
 
   mtbv = ENV["MTB_VERBOSE"].to_i
   SHH = case
