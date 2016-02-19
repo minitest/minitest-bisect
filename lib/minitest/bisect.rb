@@ -100,8 +100,11 @@ class Minitest::Bisect
     abort "Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify." unless tainted?
     puts "reproduced"
 
-    # from: {"file.rb"=>{"Class"=>["test_method"]}} to: "Class#test_method"
-    bad = failures.values.first.to_a.join "#"
+    # from: {"file.rb"=>{"Class"=>["test_method1", "test_method2"]}}
+    #   to: ["Class#test_method1", "Class#test_method2"]
+    bad = failures.values.map { |h|
+      h.map { |k,vs| vs.map { |v| "#{k}##{v}" } }
+    }.flatten
 
     raise "Nothing to verify against because every test failed. Aborting." if
       culprits.empty? && seen_bad
@@ -139,7 +142,7 @@ class Minitest::Bisect
       re = []
 
       # bad by class, you perv
-      bbc = (culprits + [bad]).map { |s| s.split(/#/, 2) }.group_by(&:first)
+      bbc = (culprits + bad).map { |s| s.split(/#/, 2) }.group_by(&:first)
 
       bbc.each do |klass, methods|
         methods = methods.map(&:last).flatten.uniq.map { |method|
