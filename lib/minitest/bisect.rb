@@ -24,6 +24,9 @@ class Minitest::Bisect
 
   def self.run files
     new.run files
+  rescue => e
+    warn e.message
+    exit 1
   end
 
   def initialize
@@ -99,6 +102,9 @@ class Minitest::Bisect
 
     # from: {"file.rb"=>{"Class"=>["test_method"]}} to: "Class#test_method"
     bad = failures.values.first.to_a.join "#"
+
+    raise "Nothing to verify against because every test failed. Aborting." if
+      culprits.empty? && seen_bad
 
     # culprits populated by initial reproduction via minitest/server
     found, count = culprits.find_minimal_combination_and_count do |test|
