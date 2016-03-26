@@ -140,6 +140,27 @@ quicker with time.
 
 * sudo gem install minitest-bisect
 
+== FAQ:
+
+==== Q: How do I resolve an "invalid option: \--server" error?
+  $ MTB_VERBOSE=2 minitest_bisect --seed 3911 example/test*.rb
+  reproducing...
+  ruby -Ilib -e 'require "./example/test_bad1.rb" ; require "./example/test_bad4.rb"' -- --seed 3911 --server 33352
+
+  invalid option: --server
+
+  minitest options:
+      -h, --help                       Display this help.
+      -s, --seed SEED                  Sets random seed. Also via env. Eg: SEED=n rake
+      -v, --verbose                    Verbose. Show progress processing files.
+      -n, --name PATTERN               Filter run on /regexp/ or string.
+
+  Known extensions: guard_minitest, pride
+      -p, --pride                      Pride. Show your testing pride!
+  Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify.
+
+A: Try adding "<tt>gem minitest-bisect</tt>" to your Gemfile and running "<tt>bundle install</tt>"
+
 == LICENSE:
 
 (The MIT License)
