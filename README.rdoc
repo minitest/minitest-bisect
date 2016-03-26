@@ -142,6 +142,22 @@ quicker with time.
 
 == FAQ:
 
+==== Q: What if my tests are in multiple subdirectories?
+
+This is assuming the following doesn't work for you:
+
+  minitest_bisect --seed 3911 test/*_test.rb
+
+because you need it to span multiple sub-directories.
+
+A: Use your shell to find the files for you
+
+  minitest_bisect --seed 3911 $(find test -type f -name \*_test.rb)
+
+or
+
+  minitest_bisect --seed 3911 test/**/*_test.rb
+
 ==== Q: How do I resolve an "invalid option: \--server" error?
   $ MTB_VERBOSE=2 minitest_bisect --seed 3911 example/test*.rb
   reproducing...
