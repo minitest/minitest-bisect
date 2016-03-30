@@ -4,7 +4,5 @@ require "minitest/bisect"
 module TestMinitest; end
 
 class TestMinitest::TestBisect < Minitest::Test
-  def test_sanity
-    # nothing yet... ugh.
-  end
+  # nothing yet... ugh.
 end
