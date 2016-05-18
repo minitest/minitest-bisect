@@ -2,9 +2,41 @@ require "minitest/find_minimal_combination"
 require "minitest/server"
 require "shellwords"
 require "rbconfig"
+require "path_expander"
 
 class Minitest::Bisect
   VERSION = "1.3.1"
+
+  class PathExpander < ::PathExpander
+    TEST_GLOB = "**/{test_*,*_test,spec_*,*_spec}.rb" # :nodoc:
+
+    attr_accessor :rb_flags
+
+    def initialize args = ARGV # :nodoc:
+      super args, TEST_GLOB
+      self.rb_flags = []
+    end
+
+    ##
+    # Overrides PathExpander#process_flags to filter out ruby flags
+    # from minitest flags. Only supports -I<paths>, -d, and -w for
+    # ruby.
+
+    def process_flags flags
+      flags.reject { |flag| # all hits are truthy, so this works out well
+        case flag
+        when /^-I(.*)/ then
+          rb_flags << flag
+        when /^-d/ then
+          rb_flags << flag
+        when /^-w/ then
+          rb_flags << flag
+        else
+          false
+        end
+      }
+    end
+  end
 
   mtbv = ENV["MTB_VERBOSE"].to_i
   SHH = case
@@ -41,19 +73,22 @@ class Minitest::Bisect
     # not clearing culprits on purpose
   end
 
-  def run files
+  def run args
     Minitest::Server.run self
 
     cmd = nil
 
     if :until_I_have_negative_filtering_in_minitest != 0 then
-      files, flags = files.partition { |arg| File.file? arg }
-      rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
+      mt_flags = args.dup
+      expander = Minitest::Bisect::PathExpander.new mt_flags
+
+      files = expander.process
+      rb_flags = expander.rb_flags
       mt_flags += ["--server", $$]
 
       cmd = bisect_methods build_files_cmd(files, rb_flags, mt_flags)
     else
-      cmd = bisect_methods bisect_files files
+      cmd = bisect_methods bisect_files args
     end
 
     puts "Final reproduction:"
@@ -96,9 +131,10 @@ class Minitest::Bisect
     self.mode = :methods
 
     puts "reproducing..."
+    t0 = Time.now
     system "#{build_methods_cmd cmd} #{SHH}"
     abort "Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify." unless tainted?
-    puts "reproduced"
+    puts "reproduced in %.2f sec" % (Time.now - t0)
 
     # from: {"file.rb"=>{"Class"=>["test_method1", "test_method2"]}}
     #   to: ["Class#test_method1", "Class#test_method2"]
@@ -111,9 +147,11 @@ class Minitest::Bisect
 
     # culprits populated by initial reproduction via minitest/server
     found, count = culprits.find_minimal_combination_and_count do |test|
-      puts "# of culprit methods: #{test.size}"
+      print "# of culprit methods: #{test.size}"
 
+      t0 = Time.now
       system "#{build_methods_cmd cmd, test, bad} #{SHH}"
+      puts " in %.2f sec" % (Time.now - t0)
 
       self.tainted?
     end
