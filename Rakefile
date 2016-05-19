@@ -46,7 +46,7 @@ def req glob
   Dir["#{glob}.rb"].map { |s| "require #{s.inspect}" }.join ";"
 end
 
-task :repro do
+task :repro => :isolate do
   unless ENV.key? "SLEEP" then
     warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
     warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
@@ -61,7 +61,7 @@ task :repro do
   run "#{ruby} bin/minitest_bisect -Ilib --seed 3911 example/test*.rb"
 end
 
-task :many do
+task :many => :isolate do
   unless ENV.key? "SLEEP" then
     warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
     warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
