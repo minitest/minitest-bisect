@@ -130,28 +130,31 @@ class Minitest::Bisect
   def bisect_methods cmd
     self.mode = :methods
 
-    puts "reproducing..."
-    t0 = Time.now
-    system "#{build_methods_cmd cmd} #{SHH}"
-    abort "Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify." unless tainted?
-    puts "reproduced in %.2f sec" % (Time.now - t0)
+    time_it "reproducing...", build_methods_cmd(cmd)
 
-    # from: {"file.rb"=>{"Class"=>["test_method1", "test_method2"]}}
-    #   to: ["Class#test_method1", "Class#test_method2"]
-    bad = failures.values.map { |h|
-      h.map { |k,vs| vs.map { |v| "#{k}##{v}" } }
-    }.flatten
+    unless tainted? then
+      $stderr.puts "Reproduction run passed? Aborting."
+      abort "Try running with MTB_VERBOSE=2 to verify."
+    end
+
+    bad = map_failures
 
     raise "Nothing to verify against because every test failed. Aborting." if
       culprits.empty? && seen_bad
 
+    time_it "verifying...", build_methods_cmd(cmd, [], bad)
+
+    new_bad = map_failures
+
+    if bad == new_bad then
+      abort "Tests fail by themselves. This is not an ordering issue."
+    end
+
     # culprits populated by initial reproduction via minitest/server
     found, count = culprits.find_minimal_combination_and_count do |test|
-      print "# of culprit methods: #{test.size}"
+      prompt = "# of culprit methods: #{test.size}"
 
-      t0 = Time.now
-      system "#{build_methods_cmd cmd, test, bad} #{SHH}"
-      puts " in %.2f sec" % (Time.now - t0)
+      time_it prompt, build_methods_cmd(cmd, test, bad)
 
       self.tainted?
     end
@@ -165,6 +168,21 @@ class Minitest::Bisect
     cmd
   end
 
+  def time_it prompt, cmd
+    print prompt
+    t0 = Time.now
+    system "#{cmd} #{SHH}"
+    puts " in %.2f sec" % (Time.now - t0)
+  end
+
+  def map_failures
+    # from: {"file.rb"=>{"Class"=>["test_method1", "test_method2"]}}
+    #   to: ["Class#test_method1", "Class#test_method2"]
+    failures.values.map { |h|
+      h.map { |k,vs| vs.map { |v| "#{k}##{v}" } }
+    }.flatten.sort
+  end
+
   def build_files_cmd culprits, rb, mt
     reset
 
@@ -173,26 +191,32 @@ class Minitest::Bisect
     %(#{RUBY} #{rb.shelljoin} -e '#{tests}' -- #{mt.map(&:to_s).shelljoin})
   end
 
+  def build_re bad
+    re = []
+
+    # bad by class, you perv
+    bbc = bad.map { |s| s.split(/#/, 2) }.group_by(&:first)
+
+    bbc.each do |klass, methods|
+      methods = methods.map(&:last).flatten.uniq.map { |method|
+        method.gsub(/([`'"!?&\[\]\(\)\|\+])/, '\\\\\1')
+      }
+
+      re << /#{klass}#(?:#{methods.join "|"})/.to_s[7..-2] # (?-mix:...)
+    end
+
+    re = re.join("|").to_s.gsub(/-mix/, "")
+
+    "/^(?:#{re})$/"
+  end
+
   def build_methods_cmd cmd, culprits = [], bad = nil
     reset
 
     if bad then
-      re = []
+      re = build_re culprits + bad
 
-      # bad by class, you perv
-      bbc = (culprits + bad).map { |s| s.split(/#/, 2) }.group_by(&:first)
-
-      bbc.each do |klass, methods|
-        methods = methods.map(&:last).flatten.uniq.map { |method|
-          method.gsub(/([`'"!?&\[\]\(\)\|\+])/, '\\\\\1')
-        }
-
-        re << /#{klass}#(?:#{methods.join "|"})/.to_s[7..-2] # (?-mix:...)
-      end
-
-      re = re.join("|").to_s.gsub(/-mix/, "")
-
-      cmd += " -n \"/^(?:#{re})$/\"" if bad
+      cmd += " -n \"#{re}\"" if bad
     end
 
     if ENV["MTB_VERBOSE"].to_i >= 1 then
