@@ -147,7 +147,7 @@ class Minitest::Bisect
     new_bad = map_failures
 
     if bad == new_bad then
-      abort "Tests fail by themselves. This is not an ordering issue."
+      warn "Tests fail by themselves. This may not be an ordering issue."
     end
 
     # culprits populated by initial reproduction via minitest/server
