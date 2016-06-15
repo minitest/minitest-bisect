@@ -1,3 +1,11 @@
+=== 1.4.0 / 2016-06-15
+
+* 3 minor enhancements:
+
+  * Added better timing output, so you can estimate much of a coffee break you get.
+  * Added path_expander support.
+  * Added verification step to ensure you're not trying to bisect a non-test-order-dependency bug.
+
 === 1.3.1 / 2016-02-18
 
 * 2 bug fixes:
