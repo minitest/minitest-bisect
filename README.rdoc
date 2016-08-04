@@ -158,6 +158,13 @@ or
 
   minitest_bisect --seed 3911 test/**/*_test.rb
 
+==== Q: What if I need to run this on a typical Rails application?
+
+A: You would need to add the test/ directory in the search path like this: 
+
+   minitest_bisect --seed=3911 -Itest $(find test -type f -name \*_test.rb)
+
+
 ==== Q: How do I resolve an "invalid option: \--server" error?
   $ MTB_VERBOSE=2 minitest_bisect --seed 3911 example/test*.rb
   reproducing...
