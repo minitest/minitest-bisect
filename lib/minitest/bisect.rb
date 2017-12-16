@@ -202,7 +202,8 @@ class Minitest::Bisect
         method.gsub(/([`'"!?&\[\]\(\)\|\+])/, '\\\\\1')
       }
 
-      re << /#{klass}#(?:#{methods.join "|"})/.to_s[7..-2] # (?-mix:...)
+      methods = methods.join "|"
+      re << /#{klass}#(?:#{methods})/.to_s[7..-2] # (?-mix:...)
     end
 
     re = re.join("|").to_s.gsub(/-mix/, "")
