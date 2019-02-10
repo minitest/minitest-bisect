@@ -199,16 +199,20 @@ class Minitest::Bisect
 
     bbc.each do |klass, methods|
       methods = methods.map(&:last).flatten.uniq.map { |method|
-        method.gsub(/([`'"!?&\[\]\(\)\|\+])/, '\\\\\1')
+        re_escape method
       }
 
       methods = methods.join "|"
-      re << /#{klass}#(?:#{methods})/.to_s[7..-2] # (?-mix:...)
+      re << /#{re_escape klass}#(?:#{methods})/.to_s[7..-2] # (?-mix:...)
     end
 
     re = re.join("|").to_s.gsub(/-mix/, "")
 
     "/^(?:#{re})$/"
+  end
+
+  def re_escape str
+    str.gsub(/([`'"!?&\[\]\(\)\{\}\|\+])/, '\\\\\1')
   end
 
   def build_methods_cmd cmd, culprits = [], bad = nil
