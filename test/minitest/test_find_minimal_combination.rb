@@ -96,7 +96,7 @@ describe Array, :find_minimal_combination do
   def self.test_find_minimal_combination max, *bad
     define_method "test_find_minimal_combination_#{max}_#{bad.join "_"}" do
       a = (1..max).to_a
-      a.find_minimal_combination(&check(*bad)).must_equal bad
+      _(a.find_minimal_combination(&check(*bad))).must_equal bad
     end
   end
 
