@@ -142,17 +142,17 @@ quicker with time.
 
 == FAQ:
 
-==== Q: What if my tests are in multiple subdirectories?
+==== Q: What if my tests are in multiple subdirectories (e.g. 'test/' folder in a Rails app)?
 
 This is assuming the following doesn't work for you:
 
-  minitest_bisect --seed 3911 test/*_test.rb
+  minitest_bisect --seed 3911 -Itest test/*_test.rb
 
 because you need it to span multiple sub-directories.
 
 A: Use your shell to find the files for you
 
-  minitest_bisect --seed 3911 $(find test -type f -name \*_test.rb)
+  minitest_bisect --seed 3911 -Itest $(find test -type f -name \*_test.rb)
 
 or
 
