@@ -90,7 +90,15 @@ class TestMinitest::TestBisect < Minitest::Test
     assert_equal exp, bisect.build_re(bad)
   end
 
-  def test_build_re_escaping
+  def test_build_re_class_escaping
+    bad = ["{}#[]"]
+
+    exp = "/^(?:\\{\\}#(?:\\[\\]))$/"
+
+    assert_equal exp, bisect.build_re(bad)
+  end
+
+  def test_build_re_method_escaping
     bad = ["Some Class#It shouldn't care what the name is"]
 
     exp = "/^(?:Some Class#(?:It shouldn\\'t care what the name is))$/"
