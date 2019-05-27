@@ -5,7 +5,7 @@ require "rbconfig"
 require "path_expander"
 
 class Minitest::Bisect
-  VERSION = "1.4.0"
+  VERSION = "1.4.1"
 
   class PathExpander < ::PathExpander
     TEST_GLOB = "**/{test_*,*_test,spec_*,*_spec}.rb" # :nodoc:

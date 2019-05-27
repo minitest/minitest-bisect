@@ -1,3 +1,10 @@
+=== 1.4.1 / 2019-05-26
+
+* 2 bug fixes:
+
+  * Clarified in doco how to use -I<path> with minitest_bisect. (padi)
+  * Escape class name as well as method name in regexp. (matthewd)
+
 === 1.4.0 / 2016-06-15
 
 * 3 minor enhancements:
