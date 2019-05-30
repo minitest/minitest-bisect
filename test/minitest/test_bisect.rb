@@ -220,7 +220,7 @@ class TestMinitest::TestBisect::TestPathExpander < Minitest::Test
     expander = mtbpe.new args
 
     assert_kind_of PathExpander, expander
-    assert_equal [], expander.rb_flags
+    assert_equal %w[-Itest:lib], expander.rb_flags
     assert_same mtbpe::TEST_GLOB, expander.glob
   end
 
@@ -230,7 +230,7 @@ class TestMinitest::TestBisect::TestPathExpander < Minitest::Test
     expander = Minitest::Bisect::PathExpander.new args
 
     exp_files = %w[1 2 3 4 5 6]
-    exp_flags = %w[-Iblah -d -w]
+    exp_flags = %w[-Itest:lib -Iblah -d -w]
 
     files = expander.process_flags(args)
 
