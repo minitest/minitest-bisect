@@ -14,7 +14,7 @@ def create_test suffix, n_methods, bad_methods = {}
         case bad_methods[n]
         when true then
           $hosed += 1
-        when Fixnum then
+        when Integer then
           flunk "muahahaha order dependency bug!" if $hosed >= bad_methods[n]
         else
           assert true
