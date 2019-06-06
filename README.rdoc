@@ -30,13 +30,37 @@ Let's say you have a bunch of test files and they fail sometimes, but
 not consistently. You get a run that fails, so you record the
 randomization seed that minitest displays at the top of every run.
 
+=== Normally, it passes:
+
+  % minitest example
+  Run options: --seed 42
+
+  # Running:
+
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ..............................................................................
+  ....................
+
+  Finished in 200.341744s, 3.6371 runs/s, 3.4230 assertions/s.
+
+  800 runs, 798 assertions, 0 failures, 0 errors, 0 skips
+
 === Original Failure:
 
-Here's an example run that fails randomly:
+But someone sees the failure either locally or on the CI. They record
+the output and get the randomization seed that causes the test
+ordering bug:
 
-  $ rake
-  ruby -I.:lib -e 'require "example/test_bad1.rb";require "example/test_bad2.rb";require "example/test_bad3.rb";require "example/test_bad4.rb";require "example/test_bad5.rb";require "example/test_bad6.rb";require "example/test_bad7.rb";require "example/test_bad8.rb"'
-  Run options: --seed 3911
+  $ minitest example --seed 314
+  Run options: --seed 314
 
   # Running:
 
@@ -73,58 +97,50 @@ same order and reproduce every time.
 minitest_bisect will first minimize the number of files, then it will
 turn around and minimize the number of methods.
 
-  $ minitest_bisect --seed 3911 example/test*.rb
-  reproducing...
-  reproduced
-  # of culprit files: 4
-  # of culprit files: 2
-  # of culprit files: 2
-  # of culprit files: 2
-  # of culprit files: 2
+  % minitest_bisect example --seed 314
+  reproducing... in 203.83 sec
+  verifying... in 0.37 sec
+  # of culprit methods: 64 in 16.65 sec
+  # of culprit methods: 32 in 8.53 sec
+  # of culprit methods: 32 in 8.52 sec
+  # of culprit methods: 16 in 4.46 sec
+  # of culprit methods: 16 in 4.44 sec
+  # of culprit methods: 8 in 2.41 sec
+  # of culprit methods: 4 in 1.40 sec
+  # of culprit methods: 2 in 0.89 sec
+  # of culprit methods: 2 in 0.89 sec
+  # of culprit methods: 1 in 0.62 sec
+  # of culprit methods: 1 in 0.63 sec
 
-  Minimal files found in 5 steps:
+  Minimal methods found in 11 steps:
 
-  ruby -Ilib -e 'require "./example/test_bad1.rb" ; require "./example/test_bad4.rb"' -- --seed 3911 -s 48222
+  Culprit methods: ["TestBad1#test_bad1_1"]
 
-  reproducing...
-  reproduced
-  # of culprit methods: 64
-  # of culprit methods: 64
-  # of culprit methods: 32
-  # of culprit methods: 16
-  # of culprit methods: 8
-  # of culprit methods: 8
-  # of culprit methods: 4
-  # of culprit methods: 2
-  # of culprit methods: 2
-  # of culprit methods: 1
-
-  Minimal methods found in 10 steps:
-
-  ruby -Ilib -e 'require "./example/test_bad1.rb" ; require "./example/test_bad4.rb"' -- --seed 3911 -s 48222 -n '/^(?:TestBad1\#test_bad1_1|TestBad4\#test_bad4_4)$/'
+  ruby -Itest:lib -e 'require "./example/test_bad1.rb" ; require "./example/test_bad2.rb" ; require "./example/test_bad3.rb" ; require "./example/test_bad4.rb" ; require "./example/test_bad5.rb" ; require "./example/test_bad6.rb" ; require "./example/test_bad7.rb" ; require "./example/test_bad8.rb"' -- --seed 314 -n "/^(?:TestBad1#(?:test_bad1_1)|TestBad4#(?:test_bad4_4))$/"
 
   Final reproduction:
 
-  Run options: --seed 3911 -s 48222 -n "/^(?:TestBad1\\#test_bad1_1|TestBad4\\#test_bad4_4)$/"
+  Run options: --seed 314 -n "/^(?:TestBad1#(?:test_bad1_1)|TestBad4#(?:test_bad4_4))$/"
 
   # Running:
 
   .F
 
-  Finished in 0.505776s, 3.9543 runs/s, 1.9772 assertions/s.
+  Finished in 0.512999s, 3.8986 runs/s, 1.9493 assertions/s.
 
     1) Failure:
   TestBad4#test_bad4_4 [/Users/ryan/Work/p4/zss/src/minitest-bisect/dev/example/helper.rb:16]:
   muahahaha order dependency bug!
 
-  2 runs, 1 assertions, 1 failures, 0 errors, 0 skips
-
 Voila! This reduced it from 800 tests across 8 files down to 2 tests
-across 2 files. Note how we went from a 200 second test run to a 0.5
-second test run. Debugging that will be much easier.
+across 2 files. Note how we went from a ~200 second test run to a ~0.5
+second test run. Debugging that will be 400x faster and that much
+easier.
 
-It is now up to you to look at the source of both of those tests to
-determine what side-effects (or lack thereof) are causing your test
+=== What Now?
+
+Now, it is now up to you to look at the source of both of those tests
+to determine what side-effects (or lack thereof) are causing your test
 failure when run in this specific order.
 
 This happens in a single run. Depending on how many files / tests you
