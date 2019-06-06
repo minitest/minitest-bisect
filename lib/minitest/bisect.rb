@@ -162,8 +162,10 @@ class Minitest::Bisect
     puts
     puts "Minimal methods found in #{count} steps:"
     puts
+    puts "Culprit methods: %p" % [found]
+    puts
     cmd = build_methods_cmd cmd, found, bad
-    puts cmd
+    puts cmd.sub(/--server \d+/, "")
     puts
     cmd
   end
