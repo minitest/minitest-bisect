@@ -1,3 +1,14 @@
+=== 1.5.0 / 2019-06-06
+
+* 2 minor enhancements:
+
+  * Print out the culprit methods once done.
+  * Default to using -Itest:lib like minitest-sprint.
+
+* 1 bug fix:
+
+  * Remove the server arguments from the final repro output.
+
 === 1.4.1 / 2019-05-26
 
 * 2 bug fixes:
