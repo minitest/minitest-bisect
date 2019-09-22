@@ -8,6 +8,7 @@ Hoe.plugin :seattlerb
 Hoe.plugin :rdoc
 
 Hoe.add_include_dirs "../../minitest-server/dev/lib"
+Hoe.add_include_dirs "../../path_expander/dev/lib"
 
 Hoe.spec "minitest-bisect" do
   developer "Ryan Davis", "ryand-ruby@zenspider.com"
@@ -15,7 +16,7 @@ Hoe.spec "minitest-bisect" do
 
   dependency "rake", "> 0", :development
   dependency "minitest-server", "~> 1.0"
-  dependency "path_expander", "~> 1.0"
+  dependency "path_expander", "~> 1.1"
 end
 
 require "rake/testtask"
