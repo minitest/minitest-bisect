@@ -51,7 +51,7 @@ class Minitest::Bisect
               RbConfig::CONFIG['ruby_install_name'] +
                 RbConfig::CONFIG['EXEEXT']).sub(/.*\s.*/m, '"\&"')
 
-  attr_accessor :tainted, :failures, :culprits, :mode, :seen_bad
+  attr_accessor :tainted, :failures, :culprits, :seen_bad
   alias :tainted? :tainted
 
   def self.run files
@@ -78,18 +78,14 @@ class Minitest::Bisect
 
     cmd = nil
 
-    if :until_I_have_negative_filtering_in_minitest != 0 then
-      mt_flags = args.dup
-      expander = Minitest::Bisect::PathExpander.new mt_flags
+    mt_flags = args.dup
+    expander = Minitest::Bisect::PathExpander.new mt_flags
 
-      files = expander.process
-      rb_flags = expander.rb_flags
-      mt_flags += ["--server", $$]
+    files = expander.process
+    rb_flags = expander.rb_flags
+    mt_flags += ["--server", $$]
 
-      cmd = bisect_methods build_files_cmd(files, rb_flags, mt_flags)
-    else
-      cmd = bisect_methods bisect_files args
-    end
+    cmd = bisect_methods build_files_cmd(files, rb_flags, mt_flags)
 
     puts "Final reproduction:"
     puts
@@ -99,37 +95,7 @@ class Minitest::Bisect
     Minitest::Server.stop
   end
 
-  def bisect_files files
-    self.mode = :files
-
-    files, flags = files.partition { |arg| File.file? arg }
-    rb_flags, mt_flags = flags.partition { |arg| arg =~ /^-I/ }
-    mt_flags += ["--server", $$]
-
-    puts "reproducing..."
-    system "#{build_files_cmd files, rb_flags, mt_flags} #{SHH}"
-    abort "Reproduction run passed? Aborting. Try running with MTB_VERBOSE=2 to verify." unless tainted?
-    puts "reproduced"
-
-    found, count = files.find_minimal_combination_and_count do |test|
-      puts "# of culprit files: #{test.size}"
-
-      system "#{build_files_cmd test, rb_flags, mt_flags} #{SHH}"
-
-      self.tainted?
-    end
-
-    puts
-    puts "Minimal files found in #{count} steps:"
-    puts
-    cmd = build_files_cmd found, rb_flags, mt_flags
-    puts cmd
-    cmd
-  end
-
   def bisect_methods cmd
-    self.mode = :methods
-
     time_it "reproducing...", build_methods_cmd(cmd)
 
     unless tainted? then
@@ -245,12 +211,10 @@ class Minitest::Bisect
   def minitest_result file, klass, method, fails, assertions, time
     fails.reject! { |fail| Minitest::Skip === fail }
 
-    if mode == :methods then
-      if fails.empty? then
-        culprits << "#{klass}##{method}" unless seen_bad # UGH
-      else
-        self.seen_bad = true
-      end
+    if fails.empty? then
+      culprits << "#{klass}##{method}" unless seen_bad # UGH
+    else
+      self.seen_bad = true
     end
 
     return if fails.empty?

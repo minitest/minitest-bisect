@@ -8,6 +8,7 @@ class TestMinitest::TestBisect < Minitest::Test
 
   def setup
     self.bisect = Minitest::Bisect.new
+    bisect.reset
   end
 
   def test_class_run
@@ -124,9 +125,6 @@ class TestMinitest::TestBisect < Minitest::Test
   end
 
   def test_minitest_result
-    bisect.mode = :methods
-    bisect.reset
-
     bisect.minitest_result "file.rb", "TestClass", "test_method", [], 1, 1
 
     assert_equal false, bisect.tainted
@@ -135,9 +133,6 @@ class TestMinitest::TestBisect < Minitest::Test
   end
 
   def test_minitest_result_skip
-    bisect.mode = :methods
-    bisect.reset
-
     fail = Minitest::Skip.new("woot")
 
     bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
@@ -148,9 +143,6 @@ class TestMinitest::TestBisect < Minitest::Test
   end
 
   def test_minitest_result_fail
-    bisect.mode = :methods
-    bisect.reset
-
     fail = Minitest::Assertion.new "msg"
 
     bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
@@ -163,9 +155,6 @@ class TestMinitest::TestBisect < Minitest::Test
   end
 
   def test_minitest_result_error
-    bisect.mode = :methods
-    bisect.reset
-
     fail = Minitest::UnexpectedError.new RuntimeError.new("woot")
 
     bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
