@@ -131,11 +131,8 @@ describe Array, :find_minimal_combination do
   test_find_minimal_combination_and_count 1024, 12, 1, 2
   test_find_minimal_combination_and_count 1024, 23, 1, 1023
   test_find_minimal_combination_and_count 1024, 24, 1, 1024
-  test_find_minimal_combination_and_count 1023, 30, 1, 1023
+  test_find_minimal_combination_and_count 1023, 26, 1, 1023
 
-  # ouch
-  test_find_minimal_combination_and_count 1024,   93, 1001, 1003, 1005, 1007
-  # OUCH:
-  test_find_minimal_combination_and_count 1023, 1336, 1001, 1003, 1005, 1007
+  test_find_minimal_combination_and_count 1024, 93, 1001, 1003, 1005, 1007
+  test_find_minimal_combination_and_count 1023, 93, 1001, 1003, 1005, 1007
 end
-# HIT!
