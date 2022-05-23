@@ -1,3 +1,9 @@
+=== 1.6.0 / 2022-05-23
+
+* 1 minor enhancement:
+
+  * Removed #bisect_files and mode accessor. Just deal with methods only for now.
+
 === 1.5.1 / 2019-09-22
 
 * 1 bug fix:
