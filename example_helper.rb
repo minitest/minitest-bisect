@@ -1,4 +1,7 @@
-$hosed ||= 0
+require "minitest/autorun"
+
+$good = true
+$bomb = 0
 
 def create_test suffix, n_methods, bad_methods = {}
   raise ArgumentError, "Bad args" if Hash === n_methods
@@ -12,10 +15,16 @@ def create_test suffix, n_methods, bad_methods = {}
         sleep delay if delay > 0
 
         case bad_methods[n]
-        when true then
-          $hosed += 1
+        when :flunk then
+          flunk "muahahaha order dependency bug!" unless $good
+        when :infect then
+          $good = false
+        when :fix then
+          $good = true
+        when :tick then
+          $bomb += 1
         when Integer then
-          flunk "muahahaha order dependency bug!" if $hosed >= bad_methods[n]
+          flunk "muahahaha order dependency bug!" if $bomb >= bad_methods[n]
         else
           assert true
         end

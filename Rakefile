@@ -40,11 +40,7 @@ def banner text
 end
 
 def run cmd
-  sh cmd do end
-end
-
-def req glob
-  Dir["#{glob}.rb"].map { |s| "require #{s.inspect}" }.join ";"
+  sh cmd do end # block form lets it fail w/o halting rake
 end
 
 task :repro => :isolate do
@@ -56,10 +52,10 @@ task :repro => :isolate do
   ruby = "ruby -I.:lib"
 
   banner "Original run that causes the test order dependency bug"
-  run "#{ruby} -e '#{req "example/test*"}' -- --seed 3911"
+  run "#{ruby} example.rb --seed 1"
 
   banner "Reduce the problem down to the minimal reproduction"
-  run "#{ruby} bin/minitest_bisect -Ilib --seed 3911 example/test*.rb"
+  run "#{ruby} bin/minitest_bisect -Ilib --seed 1 example.rb"
 end
 
 task :many => :isolate do
@@ -71,10 +67,10 @@ task :many => :isolate do
   ruby = "ruby -I.:lib"
 
   banner "Original run that causes the test order dependency bug"
-  run "#{ruby} -e '#{req "example-many/test*"}' -- --seed 27083"
+  run "#{ruby} ./example_many.rb --seed 2"
 
   banner "Reduce the problem down to the minimal reproduction"
-  run "#{ruby} bin/minitest_bisect -Ilib --seed 27083 example-many/test*.rb"
+  run "#{ruby} bin/minitest_bisect -Ilib --seed 2 example_many.rb"
 end
 
 # vim: syntax=ruby
