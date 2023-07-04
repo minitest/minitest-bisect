@@ -73,4 +73,25 @@ task :many => :isolate do
   run "#{ruby} bin/minitest_bisect -Ilib --seed 2 example_many.rb"
 end
 
+task :inverse => :isolate do
+  unless ENV.key? "SLEEP" then
+    warn "NOTE: Defaulting to sleeping 0.01 seconds per test."
+    warn "NOTE: Use SLEEP=0 to disable or any other value to simulate your tests."
+  end
+
+  ruby = "ruby -I.:lib"
+
+  banner "Original run that passes (seed 1)"
+  run "#{ruby} example_inverse.rb --seed 1"
+
+  banner "Original run that *looks like* a test order dependency bug (seed 3)"
+  run "#{ruby} example_inverse.rb --seed 3"
+
+  banner "BAD bisection (tests fail by themselves) (seed 3)"
+  run "#{ruby} bin/minitest_bisect -Ilib --seed 3 example_inverse.rb"
+
+  banner "Reduce the passing run down to the minimal reproduction (seed 1)"
+  run "#{ruby} bin/minitest_bisect -Ilib --seed 1 example_inverse.rb -n=/TestBad4#test_bad4_4$/"
+end
+
 # vim: syntax=ruby

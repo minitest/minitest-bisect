@@ -58,6 +58,7 @@ class Minitest::Bisect
     new.run files
   rescue => e
     warn e.message
+    warn "Try running with MTB_VERBOSE=2 to verify."
     exit 1
   end
 
@@ -83,9 +84,9 @@ class Minitest::Bisect
 
     files = expander.process
     rb_flags = expander.rb_flags
-    mt_flags += ["--server", $$]
+    mt_flags += ["--server", $$.to_s]
 
-    cmd = bisect_methods build_files_cmd(files, rb_flags, mt_flags)
+    cmd = bisect_methods files, rb_flags, mt_flags
 
     puts "Final reproduction:"
     puts
@@ -95,26 +96,73 @@ class Minitest::Bisect
     Minitest::Server.stop
   end
 
-  def bisect_methods cmd
-    time_it "reproducing...", build_methods_cmd(cmd)
+  ##
+  # Normal: find "what is the minimal combination of tests to run to
+  #         make X fail?"
+  #
+  # Run with: minitest_bisect ... --seed=N
+  #
+  # 1. Verify the failure running normally with the seed.
+  #    2. If no failure, punt.
+  #    3. If no passing tests before failure, punt. (No culprits == no debug)
+  # 4. Verify the failure doesn't fail in isolation.
+  #    5. If it still fails by itself, warn that it might not be an ordering
+  #       issue.
+  # 6. Cull all tests after the failure, they're not involved.
+  # 7. Bisect the culprits + bad until you find a minimal combo that fails.
+  # 8. Display minimal combo by running one last time.
+  #
+  # Inverted: find "what is the minimal combination of tests to run to
+  #           make this test pass?"
+  #
+  # Run with: minitest_bisect ... --seed=N -n="/failing_test_name_regexp/"
+  #
+  # 1. Verify the failure by running normally w/ the seed and -n=/.../
+  #    2. If no failure, punt.
+  # 3. Verify the passing case by running everything.
+  #    4. If failure, punt. This is not a false positive.
+  # 5. Cull all tests after the bad test from #1, they're not involved.
+  # 6. Bisect the culprits + bad until you find a minimal combo that passes.
+  # 7. Display minimal combo by running one last time.
 
-    unless tainted? then
-      $stderr.puts "Reproduction run passed? Aborting."
-      abort "Try running with MTB_VERBOSE=2 to verify."
+  def bisect_methods files, rb_flags, mt_flags
+    bad_names, mt_flags = mt_flags.partition { |s| s =~ /^(?:-n|--name)/ }
+    normal   = bad_names.empty?
+    inverted = !normal
+
+    if inverted then
+      time_it "reproducing w/ scoped failure (inverted run!)...", build_methods_cmd(build_files_cmd(files, rb_flags, mt_flags + bad_names))
+      raise "No failures. Probably not a false positive. Aborting." if failures.empty?
+      bad = map_failures
     end
 
-    bad = map_failures
+    cmd = build_files_cmd(files, rb_flags, mt_flags)
 
-    raise "Nothing to verify against because every test failed. Aborting." if
-      culprits.empty? && seen_bad
+    msg = normal ? "reproducing..." : "reproducing false positive..."
+    time_it msg, build_methods_cmd(cmd)
 
-    time_it "verifying...", build_methods_cmd(cmd, [], bad)
-
-    new_bad = map_failures
-
-    if bad == new_bad then
-      warn "Tests fail by themselves. This may not be an ordering issue."
+    if normal then
+      raise "Reproduction run passed? Aborting." unless tainted?
+      raise "Verification failed. No culprits? Aborting." if culprits.empty? && seen_bad
+    else
+      raise "Reproduction failed? Not false positive. Aborting." if tainted?
+      raise "Verification failed. No culprits? Aborting." if culprits.empty? || seen_bad
     end
+
+    if normal then
+      bad = map_failures
+
+      time_it "verifying...", build_methods_cmd(cmd, [], bad)
+
+      new_bad = map_failures
+
+      if bad == new_bad then
+        warn "Tests fail by themselves. This may not be an ordering issue."
+      end
+    end
+
+    idx = culprits.index bad.first
+    self.culprits = culprits.take idx+1 if idx # cull tests after bad
 
     # culprits populated by initial reproduction via minitest/server
     found, count = culprits.find_minimal_combination_and_count do |test|
@@ -122,13 +170,13 @@ class Minitest::Bisect
 
       time_it prompt, build_methods_cmd(cmd, test, bad)
 
-      self.tainted?
+      normal == tainted? # either normal and failed, or inverse and passed
     end
 
     puts
     puts "Minimal methods found in #{count} steps:"
     puts
-    puts "Culprit methods: %p" % [found]
+    puts "Culprit methods: %p" % [found + bad]
     puts
     cmd = build_methods_cmd cmd, found, bad
     puts cmd.sub(/--server \d+/, "")
@@ -152,8 +200,6 @@ class Minitest::Bisect
   end
 
   def build_files_cmd culprits, rb, mt
-    reset
-
     tests = culprits.flatten.compact.map { |f| %(require "./#{f}") }.join " ; "
 
     %(#{RUBY} #{rb.shelljoin} -e '#{tests}' -- #{mt.map(&:to_s).shelljoin})

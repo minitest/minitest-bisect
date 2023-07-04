@@ -6,6 +6,7 @@ Rakefile
 bin/minitest_bisect
 example.rb
 example_helper.rb
+example_inverse.rb
 example_many.rb
 lib/minitest/bisect.rb
 lib/minitest/find_minimal_combination.rb

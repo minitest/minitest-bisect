@@ -19,10 +19,13 @@ what minitest-bisect does best.
 
 == FEATURES/PROBLEMS:
 
-* minitest_bisect first runs your tests on a per-file basis to
-  minimize the number of tests you need to sift through.
-* minitest_bisect next runs the minimized files and figures out your
-  exact failure reproduction.
+* normal mode: runs your tests with a fixed seed and minimizes the
+  tests to find a minimal set to reproduce the failure.
+* inverted mode: runs your tests with a fixed seed and a starting
+  failure and minimizes the tests to find a minimal set to reproduce
+  the false positive.
+* Includes Enumerable#find_minimal_combination and
+  #find_minimal_combination_and_count.
 
 == SYNOPSIS:
 
@@ -94,8 +97,7 @@ So, you run the tests again, but this time with minitest_bisect.
 Provide the seed given in the failure so the tests always run in the
 same order and reproduce every time.
 
-minitest_bisect will first minimize the number of files, then it will
-turn around and minimize the number of methods.
+minitest_bisect will minimize the number of methods.
 
   % minitest_bisect example --seed 314
   reproducing... in 203.83 sec
@@ -114,7 +116,7 @@ turn around and minimize the number of methods.
 
   Minimal methods found in 11 steps:
 
-  Culprit methods: ["TestBad1#test_bad1_1"]
+  Culprit methods: ["TestBad1#test_bad1_1", "TestBad4#test_bad4_4"]
 
   ruby -Itest:lib -e 'require "./example/test_bad1.rb" ; require "./example/test_bad2.rb" ; require "./example/test_bad3.rb" ; require "./example/test_bad4.rb" ; require "./example/test_bad5.rb" ; require "./example/test_bad6.rb" ; require "./example/test_bad7.rb" ; require "./example/test_bad8.rb"' -- --seed 314 -n "/^(?:TestBad1#(?:test_bad1_1)|TestBad4#(?:test_bad4_4))$/"
 
@@ -148,9 +150,47 @@ have and how long they take, the minimization might take a long time,
 but each iteration can reduce the number of tests so it should get
 quicker with time.
 
+=== But sometimes, it fails:
+
+Sometimes a test fails by itself consistently but passes most of the
+time in CI. This is a false-positive in that the test SHOULD be
+failing all the time but some other test is causing a side-effect that
+it making it pass. This is sometimes harder to track down and reason
+about. minitest-bisect now has an "inverted" mode, where you run as
+normal but point it at a failing test by name. It will then validate
+that the test fails by itself but passes when run in full with the
+given seed. Then it tries to isolate and answer "what is the minimal
+combination of tests to run to # make this test pass?". For example:
+
+  % minitest_bisect example --seed=3 -n="/failing_test_name_regexp/"
+
+  reproducing w/ scoped failure (inverted run!)... in 0.06 sec
+  reproducing false positive... in 0.06 sec
+  # of culprit methods: 2 in 0.06 sec
+  # of culprit methods: 1 in 0.06 sec
+  # of culprit methods: 1 in 0.06 sec
+
+  Minimal methods found in 3 steps:
+
+  Culprit methods: ["TestBad1#test_make_it_go", "TestBad1#test_fail_without"]
+
+  /Users/ryan/.rubies/ruby-3.2.2/bin/ruby -Itest:lib -Ilib -e 'require "./example"' -- --seed 3  -n "/^(?:TestBad1#(?:test_make_it_go|test_fail_without))$/"
+
+  Final reproduction:
+
+  Run options: --seed 3 -n "/^(?:TestBad1#(?:test_make_it_go|test_fail_without))$/"
+
+  # Running:
+
+  ..
+
+  Finished in 0.000369s, 5420.0544 runs/s, 0.0000 assertions/s.
+
+  2 runs, 0 assertions, 0 failures, 0 errors, 0 skips
+
 == REQUIREMENTS:
 
-* minitest 5
+* minitest 5+
 
 == INSTALL:
 
