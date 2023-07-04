@@ -4,10 +4,15 @@ require "shellwords"
 require "rbconfig"
 require "path_expander"
 
-class Minitest::Bisect
-  VERSION = "1.6.0"
+module Minitest; end # :nodoc:
 
-  class PathExpander < ::PathExpander
+##
+# Minitest::Bisect helps you isolate and debug random test failures.
+
+class Minitest::Bisect
+  VERSION = "1.6.0" # :nodoc:
+
+  class PathExpander < ::PathExpander # :nodoc:
     TEST_GLOB = "**/{test_*,*_test,spec_*,*_spec}.rb" # :nodoc:
 
     attr_accessor :rb_flags
@@ -39,7 +44,7 @@ class Minitest::Bisect
   end
 
   mtbv = ENV["MTB_VERBOSE"].to_i
-  SHH = case
+  SHH = case # :nodoc:
         when mtbv == 1 then " > /dev/null"
         when mtbv >= 2 then nil
         else " > /dev/null 2>&1"
@@ -51,8 +56,28 @@ class Minitest::Bisect
               RbConfig::CONFIG['ruby_install_name'] +
                 RbConfig::CONFIG['EXEEXT']).sub(/.*\s.*/m, '"\&"')
 
-  attr_accessor :tainted, :failures, :culprits, :seen_bad
+  ##
+  # True if this run has seen a failure.
+
+  attr_accessor :tainted
   alias :tainted? :tainted
+
+  ##
+  # Failures seen in this run. Shape:
+  #
+  #   {"file.rb"=>{"Class"=>["test_method1", "test_method2"] ...} ...}
+
+  attr_accessor :failures
+
+  ##
+  # An array of tests seen so far. NOT cleared by #reset.
+
+  attr_accessor :culprits
+
+  attr_accessor :seen_bad # :nodoc:
+
+  ##
+  # Top-level runner. Instantiate and call +run+, handling exceptions.
 
   def self.run files
     new.run files
@@ -62,10 +87,16 @@ class Minitest::Bisect
     exit 1
   end
 
+  ##
+  # Instantiate a new Bisect.
+
   def initialize
     self.culprits = []
     self.failures = Hash.new { |h, k| h[k] = Hash.new { |h2, k2| h2[k2] = [] } }
   end
+
+  ##
+  # Reset per-bisect-run variables.
 
   def reset
     self.seen_bad = false
@@ -73,6 +104,10 @@ class Minitest::Bisect
     failures.clear
     # not clearing culprits on purpose
   end
+
+  ##
+  # Instance-level runner. Handles Minitest::Server, argument
+  # processing, and invoking +bisect_methods+.
 
   def run args
     Minitest::Server.run self
@@ -184,14 +219,14 @@ class Minitest::Bisect
     cmd
   end
 
-  def time_it prompt, cmd
+  def time_it prompt, cmd # :nodoc:
     print prompt
     t0 = Time.now
     system "#{cmd} #{SHH}"
     puts " in %.2f sec" % (Time.now - t0)
   end
 
-  def map_failures
+  def map_failures # :nodoc:
     # from: {"file.rb"=>{"Class"=>["test_method1", "test_method2"]}}
     #   to: ["Class#test_method1", "Class#test_method2"]
     failures.values.map { |h|
@@ -199,13 +234,31 @@ class Minitest::Bisect
     }.flatten.sort
   end
 
-  def build_files_cmd culprits, rb, mt
+  def build_files_cmd culprits, rb, mt # :nodoc:
     tests = culprits.flatten.compact.map { |f| %(require "./#{f}") }.join " ; "
 
     %(#{RUBY} #{rb.shelljoin} -e '#{tests}' -- #{mt.map(&:to_s).shelljoin})
   end
 
-  def build_re bad
+  def build_methods_cmd cmd, culprits = [], bad = nil # :nodoc:
+    reset
+
+    if bad then
+      re = build_re culprits + bad
+
+      cmd += " -n \"#{re}\"" if bad
+    end
+
+    if ENV["MTB_VERBOSE"].to_i >= 1 then
+      puts
+      puts cmd
+      puts
+    end
+
+    cmd
+  end
+
+  def build_re bad # :nodoc:
     re = []
 
     # bad by class, you perv
@@ -225,36 +278,18 @@ class Minitest::Bisect
     "/^(?:#{re})$/"
   end
 
-  def re_escape str
+  def re_escape str # :nodoc:
     str.gsub(/([`'"!?&\[\]\(\)\{\}\|\+])/, '\\\\\1')
-  end
-
-  def build_methods_cmd cmd, culprits = [], bad = nil
-    reset
-
-    if bad then
-      re = build_re culprits + bad
-
-      cmd += " -n \"#{re}\"" if bad
-    end
-
-    if ENV["MTB_VERBOSE"].to_i >= 1 then
-      puts
-      puts cmd
-      puts
-    end
-
-    cmd
   end
 
   ############################################################
   # Server Methods:
 
-  def minitest_start
+  def minitest_start # :nodoc:
     self.failures.clear
   end
 
-  def minitest_result file, klass, method, fails, assertions, time
+  def minitest_result file, klass, method, fails, assertions, time # :nodoc:
     fails.reject! { |fail| Minitest::Skip === fail }
 
     if fails.empty? then

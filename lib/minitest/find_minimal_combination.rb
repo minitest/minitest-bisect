@@ -1,10 +1,13 @@
 #!/usr/bin/ruby -w
 
-module Minitest; end
+##
+# Finds the minimal combination of a collection of items that satisfy
+# +test+.
 
 class ComboFinder
   ##
-  # Find the minimal combination of a collection of items that satisfy +test+.
+  # Find the minimal combination of a collection of items that satisfy
+  # +test+.
   #
   # If you think of the collection as a binary tree, this algorithm
   # does a breadth first search of the combinations that satisfy
@@ -79,11 +82,11 @@ class ComboFinder
     ary
   end
 
-  def d s = ""
+  def d s = "" # :nodoc:
     warn s if ENV["MTB_DEBUG"]
   end
 
-  def cache_result result, data, cache
+  def cache_result result, data, cache # :nodoc:
     cache[data] = true
 
     return result if result
@@ -103,7 +106,7 @@ class ComboFinder
   end
 end
 
-class Array
+class Array # :nodoc:
   ##
   # Find the minimal combination of a collection of items that satisfy +test+.
 
