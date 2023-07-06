@@ -1,3 +1,23 @@
+=== 1.7.0 / 2023-07-06
+
+* 1 major enhancement:
+
+  * Extend bisect_methods to do "inverse" run (eg false positives) via -n=/RE/ argument.
+
+* 4 minor enhancements:
+
+  * Added example_inverse.rb
+  * Collapsed examples from directories to individual files.
+  * Refactor: push command generation from #run down to #bisect_methods.
+  * build_files_cmd no longer calls reset (zero effect change).
+
+* 4 bug fixes:
+
+  * 100% documentation coverage.
+  * Fix server process ID to be a string to match rest of args.
+  * Fix shebang cmd on bin/minitest_bisect.
+  * Print known bad methods with found culprit methods in final run.
+
 === 1.6.0 / 2022-05-23
 
 * 1 minor enhancement:
