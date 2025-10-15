@@ -24,12 +24,12 @@ class TestMinitest::TestBisect < Minitest::Test
   end
 
   def test_build_files_cmd
-    files = %w[a.rb b.rb c.rb]
+    files = %w[a.rb b.rb] + [%(#{Dir.pwd}/c.rb)]
     rb    = %w[-Ilib:test]
     mt    = %w[--seed 42]
 
     ruby = Minitest::Bisect::RUBY
-    body = "require \"./a.rb\" ; require \"./b.rb\" ; require \"./c.rb\""
+    body = "require \"#{Dir.pwd}/a.rb\" ; require \"#{Dir.pwd}/b.rb\" ; require \"#{Dir.pwd}/c.rb\""
 
     exp = "#{ruby} -Ilib:test -e '#{body}' -- --seed 42"
     act = bisect.build_files_cmd(files, rb, mt)

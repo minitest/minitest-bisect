@@ -235,7 +235,7 @@ class Minitest::Bisect
   end
 
   def build_files_cmd culprits, rb, mt # :nodoc:
-    tests = culprits.flatten.compact.map { |f| %(require "./#{f}") }.join " ; "
+    tests = culprits.flatten.compact.map { |f| %(require "#{File.expand_path f}") }.join " ; "
 
     %(#{RUBY} #{rb.shelljoin} -e '#{tests}' -- #{mt.map(&:to_s).shelljoin})
   end
