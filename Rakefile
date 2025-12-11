@@ -16,7 +16,7 @@ Hoe.spec "minitest-bisect" do
 
   dependency "rake", "> 0", :development
   dependency "minitest-server", "~> 1.0"
-  dependency "path_expander", "~> 1.1"
+  dependency "path_expander", "~> 2.0"
 end
 
 require "rake/testtask"

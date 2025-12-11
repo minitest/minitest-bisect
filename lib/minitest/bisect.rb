@@ -117,7 +117,7 @@ class Minitest::Bisect
     mt_flags = args.dup
     expander = Minitest::Bisect::PathExpander.new mt_flags
 
-    files = expander.process
+    files = expander.process.to_a
     rb_flags = expander.rb_flags
     mt_flags += ["--server", $$.to_s]
 

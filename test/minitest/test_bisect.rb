@@ -208,7 +208,6 @@ class TestMinitest::TestBisect::TestPathExpander < Minitest::Test
     mtbpe = Minitest::Bisect::PathExpander
     expander = mtbpe.new args
 
-    assert_kind_of PathExpander, expander
     assert_equal %w[-Itest:lib], expander.rb_flags
     assert_same mtbpe::TEST_GLOB, expander.glob
   end
