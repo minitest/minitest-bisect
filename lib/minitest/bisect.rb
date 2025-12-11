@@ -10,7 +10,7 @@ module Minitest; end # :nodoc:
 # Minitest::Bisect helps you isolate and debug random test failures.
 
 class Minitest::Bisect
-  VERSION = "1.7.0" # :nodoc:
+  VERSION = "1.8.0" # :nodoc:
 
   class PathExpander < ::PathExpander # :nodoc:
     TEST_GLOB = "**/{test_*,*_test,spec_*,*_spec}.rb" # :nodoc:
