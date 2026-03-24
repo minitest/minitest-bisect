@@ -1,5 +1,5 @@
 require "minitest/autorun"
-require "minitest/bisect"
+require_relative "../../lib/minitest/bisect"
 
 module TestMinitest; end
 
