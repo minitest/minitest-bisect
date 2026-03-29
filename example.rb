@@ -14,6 +14,7 @@ TestBad8 = create_test 8, 100
 
 # seed 1 == one fail
 # seed 3 == all pass
+# seed 64 == one fail that happens relatively quickly
 
 # % SLEEP=0 ruby ./example.rb --seed 1
 #

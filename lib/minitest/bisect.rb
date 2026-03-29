@@ -302,5 +302,6 @@ class Minitest::Bisect
 
     self.tainted = true
     self.failures[file][klass] << method
+    raise Interrupt
   end
 end

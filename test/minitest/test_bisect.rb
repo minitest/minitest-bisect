@@ -145,7 +145,9 @@ class TestMinitest::TestBisect < Minitest::Test
   def test_minitest_result_fail
     fail = Minitest::Assertion.new "msg"
 
-    bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
+    assert_raises(Interrupt) do
+      bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
+    end
 
     exp = {"file.rb" => {"TestClass" => ["test_method"] }}
 
@@ -157,7 +159,9 @@ class TestMinitest::TestBisect < Minitest::Test
   def test_minitest_result_error
     fail = Minitest::UnexpectedError.new RuntimeError.new("woot")
 
-    bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
+    assert_raises(Interrupt) do
+      bisect.minitest_result "file.rb", "TestClass", "test_method", [fail], 1, 1
+    end
 
     exp = {"file.rb" => {"TestClass" => ["test_method"] }}
 
